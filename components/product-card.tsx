@@ -35,11 +35,11 @@ export default function ProductCard({
       className="group block h-full"
     >
       <Card className="overflow-hidden hover:shadow-xl dark:hover:shadow-primary/20 transition-all duration-500 cursor-pointer h-full flex flex-col bg-card dark:bg-card/50 border border-border dark:border-border/50 hover:border-accent/50 dark:hover:border-accent/30">
-        <div className="relative overflow-hidden bg-muted aspect-square sm:aspect-video md:aspect-square flex-shrink-0">
+        <div className="relative overflow-hidden bg-muted aspect-square flex-shrink-0 w-full">
           <img
             src={product.image || "/placeholder.svg"}
             alt={product.name}
-            className={`w-full h-full object-cover transition-transform duration-700 ${
+            className={`w-full h-full object-cover object-fill object-center transition-transform duration-700 ${
               isHovered ? "scale-110" : "scale-100"
             }`}
           />
@@ -51,7 +51,7 @@ export default function ProductCard({
           />
 
           <div
-            className={`absolute bottom-2 sm:bottom-4 right-2 sm:right-4 bg-gradient-to-r from-primary to-accent text-primary-foreground px-3 sm:px-5 py-1.5 sm:py-2 rounded-full font-semibold text-xs sm:text-sm transition-all duration-500 transform ${
+            className={`absolute bottom-2 sm:bottom-4 right-2 sm:right-4 bg-gradient-to-r from-primary to-accent text-black dark:text-white px-3 sm:px-5 py-1.5 sm:py-2 rounded-full font-semibold text-xs sm:text-sm transition-all duration-500 transform ${
               isHovered
                 ? "translate-y-0 opacity-100 scale-100"
                 : "translate-y-8 opacity-0 scale-95"
@@ -66,7 +66,7 @@ export default function ProductCard({
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
               {product.category}
             </p>
-            <span className="text-xs bg-accent/10 dark:bg-accent/20 text-accent px-2.5 py-1 rounded-full font-medium whitespace-nowrap">
+            <span className="text-xs bg-accent/90   px-2.5 py-1 rounded-full font-medium whitespace-nowrap">
               {product.type}
             </span>
           </div>

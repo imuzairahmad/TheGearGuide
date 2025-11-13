@@ -8,12 +8,13 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 const PRODUCTS = [
   {
     id: 1,
-    name: "Premium Wireless Headphones",
+    name: "Stanley Heritage Classic Vacuum Bottle with Handle 1.1 qt | Wide Mouth w/Leakproof Cup Lid | Keep Drinks Hot or Cold | Insulated Stainless Steel Thermal Bottle | BPA-Free | Hammertone Green",
     category: "Audio",
     price: "$199",
-    image: "/premium-wireless-headphones.png",
-    amazonUrl: "https://amazon.com/s?k=premium+wireless+headphones",
-    type: "audio",
+    image: "/image.svg",
+    amazonUrl:
+      "https://www.amazon.com/Stanley-Classic-Vacuum-Bottle-Hammertone/dp/B000FZX93K/?_encoding=UTF8&pd_rd_w=GOFq3&content-id=amzn1.sym.4bba068a-9322-4692-abd5-0bbe652907a9&pf_rd_p=4bba068a-9322-4692-abd5-0bbe652907a9&pf_rd_r=SQSR1CMAVM8H8D2PNCDG&pd_rd_wg=3HlKb&pd_rd_r=48e5dbad-ca7f-40ca-89d8-fe77195fb11d&ref_=pd_hp_d_btf_nta-top-picks&th=1",
+    type: "Water Bottle",
   },
 ];
 
@@ -34,9 +35,9 @@ export default function ProductShowcase() {
   return (
     <section
       id="products"
-      className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-background dark:bg-background"
+      className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 "
     >
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12 sm:mb-16 space-y-4 sm:space-y-6 animate-fade-in-up">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
             Featured Selection
