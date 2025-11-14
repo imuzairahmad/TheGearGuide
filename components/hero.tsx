@@ -4,7 +4,10 @@ import { Button } from "@/components/ui/button";
 
 export default function Hero() {
   return (
-    <section className="relative min-h-svh flex items-center justify-center bg-gradient-to-b from-background via-background to-background dark:from-background dark:via-background/95 dark:to-background px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <section
+      id="home"
+      className="relative min-h-svh flex items-center justify-center bg-gradient-to-b from-background via-background to-background dark:from-background dark:via-background/95 dark:to-background px-4 sm:px-6 lg:px-8 overflow-hidden"
+    >
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 right-10 w-48 sm:w-72 md:w-96 h-48 sm:h-72 md:h-96 bg-accent/10 dark:bg-accent/15 rounded-full blur-3xl animate-float"></div>
         <div

@@ -1,13 +1,19 @@
-import BoldSection from "@/components/blog-section";
+import ComplementPage from "@/components/complement-page";
 import Hero from "@/components/hero";
-import ProductShowcase from "@/components/product-showcase";
+import Navbar from "@/components/navbar";
+import ProductGrid from "@/components/product-grid";
+import TestimonialsSection from "@/components/testimonials-section";
+import TrustSection from "@/components/trust-section";
 
 export default function Home() {
   return (
     <>
+      <Navbar />
       <Hero />
-      <BoldSection />
-      <ProductShowcase />
+      <ProductGrid />
+      <TrustSection />
+      <TestimonialsSection />
+      <ComplementPage />
     </>
   );
 }
