@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { ToggleTheme } from "./toggle-theme";
+import { Button } from "./ui/button";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -36,8 +37,8 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden items-center gap-6 md:flex">
-            <Link
-              href={"#products"}
+            <Button
+              variant={"ghost"}
               className="text-sm font-medium text-foreground/80 transition-colors hover:text-foreground"
               onClick={() =>
                 document
@@ -46,9 +47,9 @@ export default function Navbar() {
               }
             >
               Products
-            </Link>
-            <Link
-              href={"#reviews"}
+            </Button>
+            <Button
+              variant={"ghost"}
               className="text-sm font-medium text-foreground/80 transition-colors hover:text-foreground"
               onClick={() =>
                 document
@@ -57,7 +58,7 @@ export default function Navbar() {
               }
             >
               Reviews
-            </Link>
+            </Button>
           </div>
 
           {/* Right side - Theme toggle + Mobile menu button */}
@@ -79,8 +80,8 @@ export default function Navbar() {
         {isOpen && (
           <div className="border-t border-border/40 pb-4 md:hidden">
             <div className="flex flex-col gap-3 pt-4">
-              <Link
-                href={"#products"}
+              <Button
+                variant={"ghost"}
                 className="text-sm font-medium text-foreground/80 transition-colors hover:text-foreground"
                 onClick={() =>
                   document
@@ -89,9 +90,9 @@ export default function Navbar() {
                 }
               >
                 Products
-              </Link>
-              <Link
-                href={"#reviews"}
+              </Button>
+              <Button
+                variant={"ghost"}
                 className="text-sm font-medium text-foreground/80 transition-colors hover:text-foreground"
                 onClick={() =>
                   document
@@ -100,7 +101,7 @@ export default function Navbar() {
                 }
               >
                 Reviews
-              </Link>
+              </Button>
             </div>
           </div>
         )}

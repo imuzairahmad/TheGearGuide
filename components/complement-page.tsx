@@ -2,7 +2,7 @@ import { Button } from "./ui/button";
 
 export default function ComplementPage() {
   return (
-    <div className="text-center  my-12 sm:my-16 md:my-20 animate-fade-in-up animate-delay-300">
+    <div className="text-center  my-12 sm:my-16 md:my-20 animate-fade-in-up animate-delay-300 mx-5">
       <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
         Want to explore more curated collections?
       </p>
