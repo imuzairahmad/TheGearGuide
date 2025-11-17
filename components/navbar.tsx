@@ -4,7 +4,18 @@ import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { ToggleTheme } from "./toggle-theme";
-import { Button } from "./ui/button";
+import { Button, buttonVariants } from "./ui/button";
+
+const items = [
+  {
+    title: "Products",
+    href: "/#products",
+  },
+  {
+    title: "Reviews",
+    href: "/#reviews",
+  },
+];
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -37,28 +48,15 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden items-center gap-6 md:flex">
-            <Button
-              variant={"ghost"}
-              className="text-sm font-medium text-foreground/80 transition-colors hover:text-foreground"
-              onClick={() =>
-                document
-                  .getElementById("products")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-            >
-              Products
-            </Button>
-            <Button
-              variant={"ghost"}
-              className="text-sm font-medium text-foreground/80 transition-colors hover:text-foreground"
-              onClick={() =>
-                document
-                  .getElementById("reviews")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-            >
-              Reviews
-            </Button>
+            {items.map((item) => (
+              <Link
+                key={item.title}
+                href={item.href}
+                className={`${buttonVariants({ variant: "ghost" })}`}
+              >
+                {item.title}
+              </Link>
+            ))}
           </div>
 
           {/* Right side - Theme toggle + Mobile menu button */}
@@ -80,28 +78,15 @@ export default function Navbar() {
         {isOpen && (
           <div className="border-t border-border/40 pb-4 md:hidden">
             <div className="flex flex-col gap-3 pt-4">
-              <Button
-                variant={"ghost"}
-                className="text-sm font-medium text-foreground/80 transition-colors hover:text-foreground"
-                onClick={() =>
-                  document
-                    .getElementById("products")
-                    ?.scrollIntoView({ behavior: "smooth" })
-                }
-              >
-                Products
-              </Button>
-              <Button
-                variant={"ghost"}
-                className="text-sm font-medium text-foreground/80 transition-colors hover:text-foreground"
-                onClick={() =>
-                  document
-                    .getElementById("reviews")
-                    ?.scrollIntoView({ behavior: "smooth" })
-                }
-              >
-                Reviews
-              </Button>
+              {items.map((item) => (
+                <Link
+                  key={item.title}
+                  href={item.href}
+                  className={`${buttonVariants({ variant: "ghost" })}`}
+                >
+                  {item.title}
+                </Link>
+              ))}
             </div>
           </div>
         )}

@@ -1,9 +1,44 @@
 "use client";
 
-import { PRODUCTS } from "@/lib/products";
+import { useEffect, useState } from "react";
 import ProductCard from "./product-card";
+import { MappedProduct } from "@/lib/contentful";
+import { LoaderCircle } from "lucide-react";
 
 export default function ProductGrid() {
+  const [products, setProducts] = useState<MappedProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch("/api/products");
+        const data = await response.json();
+        setProducts(data);
+      } catch (error) {
+        console.error("[v0] Failed to fetch products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="py-16 sm:py-24 md:py-32 px-4 sm:px-6 lg:px-8 bg-background dark:bg-background">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center">
+            <p className="text-muted-foreground">
+              <LoaderCircle />
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section
       id="products"
@@ -21,7 +56,7 @@ export default function ProductGrid() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 animate-fade-in-up">
-          {PRODUCTS.map((product) => (
+          {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
