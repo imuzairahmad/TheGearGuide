@@ -11,10 +11,10 @@ const items = [
     title: "Products",
     href: "/#products",
   },
-  {
-    title: "Reviews",
-    href: "/#reviews",
-  },
+  // {
+  //   title: "Reviews",
+  //   href: "/#reviews",
+  // },
 ];
 
 export default function Navbar() {

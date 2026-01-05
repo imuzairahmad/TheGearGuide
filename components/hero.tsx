@@ -23,21 +23,22 @@ export default function Hero() {
       <div className="relative z-10 max-w-5xl mx-auto text-center space-y-6 sm:space-y-8">
         <div className="inline-block animate-fade-in-up animate-delay-100">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest letter-spacing-wide">
-            ✨ Curated Product Collection
+            ✨ Curated Amazon Products Affiliation
           </p>
         </div>
 
         <h1 className="text-5xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-light tracking-tighter text-foreground text-balance leading-tight animate-fade-in-up animate-delay-200">
-          Discover{" "}
+          Amazon{" "}
           <span className="font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Exceptional
+            Product
           </span>{" "}
-          <br className="hidden md:block" /> Products
+          <br className="hidden md:block" />
+          Affiliation
         </h1>
 
         <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed font-light animate-fade-in-up animate-delay-300">
-          A carefully selected collection of premium products showcased for
-          quality, design, and value. Click any product to purchase on Amazon.
+          A curated selection of premium products chosen for quality and value.
+          Click any product to view and purchase it on Amazon.
         </p>
 
         <div className="pt-6 sm:pt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center animate-fade-in-up animate-delay-400">

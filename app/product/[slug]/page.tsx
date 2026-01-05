@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Star, ArrowLeft, Check, X, LoaderCircle } from "lucide-react";
 import Zoom from "react-medium-image-zoom";
-// @ts-ignore: Ignore import error for CSS
-import "react-medium-image-zoom/dist/styles.css";
+// import "react-medium-image-zoom/dist/styles.css";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";

@@ -12,7 +12,7 @@ export default function Home() {
         <ProductGrid />
       </div>
       <TrustSection />
-      <TestimonialsSection />
+      {/* <TestimonialsSection /> */}
       <ComplementPage />
     </>
   );
