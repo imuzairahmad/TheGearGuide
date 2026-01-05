@@ -1,12 +1,12 @@
 import type React from "react";
+import "./globals.css";
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
-import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import Navbar from "@/components/navbar";
 import Preview from "@/components/preview";
 
-const _poppins = Poppins({
+const poppins = Poppins({
   weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
 });
@@ -18,14 +18,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`font-sans antialiased transition-colors duration-300 ${_poppins.className}`}
-      >
+    <html lang="en" className={poppins.className} suppressHydrationWarning>
+      <body className="transition-colors duration-300">
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
