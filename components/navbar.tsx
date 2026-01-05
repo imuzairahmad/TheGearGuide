@@ -47,7 +47,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden items-center gap-6 md:flex">
+          <div className="hidden  md:flex">
             {items.map((item) => (
               <Link
                 key={item.title}
