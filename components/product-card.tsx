@@ -15,17 +15,15 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   return (
     <Card className="group overflow-hidden hover:shadow-lg transition-shadow duration-300 bg-card dark:bg-card border border-border dark:border-border/50 flex flex-col h-full">
-      <Link href={`/product/${product.slug}`}>
-        <div className="aspect-square overflow-hidden bg-muted dark:bg-muted cursor-pointer">
-          <Image
-            src={product.image || "/placeholder.svg"}
-            alt={product.title}
-            width={300}
-            height={300}
-            className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-300"
-          />
-        </div>
-      </Link>
+      <div className="aspect-square overflow-hidden bg-muted dark:bg-muted cursor-pointer">
+        <Image
+          src={product.image || "/placeholder.svg"}
+          alt={product.title}
+          width={300}
+          height={300}
+          className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-300"
+        />
+      </div>
 
       <div className="p-4 sm:p-5 space-y-3 sm:space-y-4 flex-grow flex flex-col">
         <div>
