@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { contentfulClient, mapContentfulProduct } from "@/lib/contentful";
 
 export async function GET() {
