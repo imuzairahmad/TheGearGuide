@@ -60,9 +60,6 @@ export default function SpliterPage() {
           <div className="animate-fade-in-up">
             <h2 className="text-2xl font-bold">⭐ Products:</h2>
           </div>
-          <div>
-            <h1 className="text-2xl">Comming soon):</h1>
-          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 animate-fade-in-up">

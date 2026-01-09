@@ -155,7 +155,7 @@ export default function ProductDetailPage() {
             >
               <Button
                 size="lg"
-                className="w-full bg-primary hover:bg-primary/90 text-white"
+                className="w-full bg-primary text-primary-foreground dark:bg-primary/90 dark:text-primary-foreground font-medium rounded-lg transition-all duration-300 hover:scale-105 hover:bg-primary/90"
               >
                 View on Amazon
               </Button>
