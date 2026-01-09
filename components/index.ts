@@ -4,3 +4,5 @@ export { default as ProductCard } from "./product-card";
 export { default as TrustSection } from "./trust-section";
 export { default as TestimonialsSection } from "./testimonials-section";
 export { default as ComplementPage } from "./complement-page";
+export { default as Footer } from "./footer";
+export { default as ContactForm } from "./contactform";

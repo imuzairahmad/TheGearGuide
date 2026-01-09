@@ -1,19 +1,17 @@
-import ComplementPage from "@/components/complement-page";
+import ContactForm from "@/components/contactform";
+import Footer from "@/components/footer";
 import Hero from "@/components/hero";
 import ProductGrid from "@/components/product-grid";
-import TestimonialsSection from "@/components/testimonials-section";
-import TrustSection from "@/components/trust-section";
 
-export default function Home() {
+export default async function Home() {
   return (
     <>
       <Hero />
-      <div id="products">
+      <div id="top-picks">
         <ProductGrid />
       </div>
-      <TrustSection />
-      {/* <TestimonialsSection /> */}
-      <ComplementPage />
+      <ContactForm />
+      <Footer />
     </>
   );
 }

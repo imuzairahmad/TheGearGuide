@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Star, ArrowLeft, Check, X, LoaderCircle } from "lucide-react";
 import Zoom from "react-medium-image-zoom";
 // import "react-medium-image-zoom/dist/styles.css";
@@ -41,7 +40,7 @@ export default function ProductDetailPage() {
     return (
       <main className="min-h-screen bg-background px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <Link href="/">
+          <Link href="/#top-picks">
             <Button variant="ghost" className="mb-8">
               <ArrowLeft className="mr-2" size={20} />
               Back to Products
@@ -61,7 +60,7 @@ export default function ProductDetailPage() {
     return (
       <main className="min-h-screen bg-background px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <Link href="/#products">
+          <Link href="/#top-picks">
             <Button variant="ghost" className="mb-8">
               <ArrowLeft className="mr-2" size={20} />
               Back to Products
@@ -86,7 +85,7 @@ export default function ProductDetailPage() {
   return (
     <main className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <Link href="/#products">
+        <Link href="/#top-picks">
           <Button variant="ghost" className="mb-8">
             <ArrowLeft className="mr-2" size={20} />
             Back to Products

@@ -1,0 +1,105 @@
+import { BackgroundBeams } from "./ui/background-beams";
+
+const footerData = [
+  {
+    title: "🏆 Shop Now on Amazon",
+    description:
+      "✔️ Click on your favorite items and enjoy hassle-free shopping. As a participant in the Amazon Associates Program, we earn from qualifying purchases.",
+  },
+  {
+    title: "🔥 Top Categories & Finds",
+    links: [
+      {
+        name: "➜ Tech & Gadgets ",
+        description: "– Latest electronics and accessories",
+      },
+      {
+        name: "➜ Home & Kitchen ",
+        description: "– Smart solutions for everyday living",
+      },
+      {
+        name: "➜ Fashion & Beauty ",
+        description: "– Stylish picks for every season",
+      },
+      {
+        name: "➜ Fitness & Wellness ",
+        description: "– Gear to keep you active and healthy",
+      },
+    ],
+  },
+  {
+    title: "🧠 Why Shop With Us",
+    links: [
+      {
+        name: "● Handpicked Products ",
+        description: "– Top reviews and quality selection",
+      },
+      {
+        name: "● Exclusive Deals ",
+        description: "– Special discounts and offers",
+      },
+      {
+        name: "● Fast Checkout ",
+        description: "– Easy and secure Amazon checkout",
+      },
+    ],
+  },
+];
+
+export default function Footer() {
+  return (
+    <footer
+      className="
+        relative overflow-hidden
+        bg-neutral-50 text-neutral-800
+        dark:bg-neutral-950 dark:text-neutral-200
+      "
+    >
+      {/* Curved Top */}
+      <div className="absolute top-0 left-0 w-full overflow-hidden leading-none text-inherit">
+        <svg
+          viewBox="0 0 1440 90"
+          className="block w-full h-[90px]"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M0,80 C240,10 480,10 720,40 960,70 1200,70 1440,40 L1440,0 L0,0 Z"
+            fill="currentColor"
+          />
+        </svg>
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4 pt-24 pb-14">
+        <div className="grid gap-10 md:grid-cols-3">
+          {footerData.map((column, index) => (
+            <div key={index}>
+              <h3 className="mb-4 text-lg font-semibold">{column.title}</h3>
+              {column.description && (
+                <p className="mb-3 text-sm opacity-80">{column.description}</p>
+              )}
+              {column.links && (
+                <ul className="space-y-3 text-sm">
+                  {column.links.map((link, idx) => (
+                    <li key={idx}>
+                      <span className="font-medium">{link.name}</span>
+                      <span className="opacity-70">{link.description}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="mt-12 border-t border-black/10 dark:border-white/10 pt-6 text-center text-xs opacity-60">
+          © {new Date().getFullYear()} TheGearGuide. All rights reserved.
+        </div>
+      </div>
+
+      {/* Background Effect */}
+      <BackgroundBeams className="opacity-40 dark:opacity-30" />
+    </footer>
+  );
+}

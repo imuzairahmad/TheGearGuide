@@ -1,17 +1,17 @@
+// app/api/products/route.ts
+import { NextResponse } from "next/server";
+import { getTopPickProducts } from "@/lib/contentful";
+
 export const dynamic = "force-dynamic";
-import { contentfulClient, mapContentfulProduct } from "@/lib/contentful";
 
 export async function GET() {
   try {
-    const response = await contentfulClient.getEntries({
-      content_type: "product",
-    });
+    const products = await getTopPickProducts();
 
-    const products = response.items.map((item) => mapContentfulProduct(item));
-    return Response.json(products);
+    return NextResponse.json(products);
   } catch (error) {
     console.error("[v0] Contentful fetch error:", error);
-    return Response.json(
+    return NextResponse.json(
       { error: "Failed to fetch products" },
       { status: 500 }
     );

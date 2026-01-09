@@ -1,10 +1,13 @@
+// app/api/products/[slug]/route.ts
+import { NextResponse } from "next/server";
 import { contentfulClient, mapContentfulProduct } from "@/lib/contentful";
+export const revalidate = 3600;
 
 export async function GET(
   request: Request,
-  context: { params: Promise<{ slug: string }> }
+  context: { params: { slug: string } }
 ) {
-  const { slug } = await context.params; // FIX: params is a Promise
+  const { slug } = context.params;
 
   try {
     const response = await contentfulClient.getEntries({
@@ -14,15 +17,17 @@ export async function GET(
     });
 
     if (!response.items.length) {
-      return Response.json({ error: "Product not found" }, { status: 404 });
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
     const product = mapContentfulProduct(response.items[0]);
 
-    return Response.json(product);
+    return NextResponse.json(product);
   } catch (error) {
     console.error("[Contentful] product fetch error:", error);
-
-    return Response.json({ error: "Failed to fetch product" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch product" },
+      { status: 500 }
+    );
   }
 }

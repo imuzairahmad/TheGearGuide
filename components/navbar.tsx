@@ -8,13 +8,17 @@ import { Button, buttonVariants } from "./ui/button";
 
 const items = [
   {
-    title: "Products",
-    href: "/#products",
+    title: "Top Picks ✨",
+    href: "/#top-picks",
   },
-  // {
-  //   title: "Reviews",
-  //   href: "/#reviews",
-  // },
+  {
+    title: "Products",
+    href: "/products",
+  },
+  {
+    title: "Contact",
+    href: "/#contact-form",
+  },
 ];
 
 export default function Navbar() {
