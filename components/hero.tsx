@@ -1,6 +1,4 @@
 "use client";
-
-import { Button } from "@/components/ui/button";
 import { BackgroundRippleEffect } from "./ui/background-ripple-effect";
 
 export default function Hero() {

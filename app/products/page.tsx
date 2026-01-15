@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import ProductCard from "../../components/product-card";
 import { MappedProduct } from "@/lib/contentful";
 import { LoaderCircle, ArrowLeft, ArrowRight } from "lucide-react";
@@ -17,9 +18,14 @@ import {
 const PAGE_SIZE = 12;
 
 export default function SpliterPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   const [allProducts, setAllProducts] = useState<MappedProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
+
+  const pageFromURL = Number(searchParams.get("page") || 1);
+  const [page, setPage] = useState(pageFromURL);
 
   const [category, setCategory] = useState("All");
   const [subcategory, setSubcategory] = useState("All");
@@ -42,26 +48,33 @@ export default function SpliterPage() {
     fetchProducts();
   }, []);
 
+  // Update page state if URL changes manually
+  useEffect(() => {
+    setPage(pageFromURL);
+  }, [pageFromURL]);
+
   // Generate categories from all products
-  const categories = useMemo(() => {
-    const unique = Array.from(new Set(allProducts.map((p) => p.category)));
-    return ["All", ...unique];
-  }, [allProducts]);
+  const categories = useMemo(
+    () => ["All", ...Array.from(new Set(allProducts.map((p) => p.category)))],
+    [allProducts]
+  );
 
   // Generate subcategories for selected category
   const subcategories = useMemo(() => {
     if (category === "All") return ["All"];
-    const unique = Array.from(
-      new Set(
-        allProducts
-          .filter((p) => p.category === category)
-          .map((p) => p.subcategory || "Uncategorized")
-      )
-    );
-    return ["All", ...unique];
+    return [
+      "All",
+      ...Array.from(
+        new Set(
+          allProducts
+            .filter((p) => p.category === category)
+            .map((p) => p.subcategory || "Uncategorized")
+        )
+      ),
+    ];
   }, [allProducts, category]);
 
-  // Filtered products based on category/subcategory
+  // Filter products
   const filteredProducts = useMemo(() => {
     return allProducts.filter((p) => {
       const sub = p.subcategory || "Uncategorized";
@@ -79,29 +92,34 @@ export default function SpliterPage() {
     return filteredProducts.slice(start, start + PAGE_SIZE);
   }, [filteredProducts, page]);
 
-  // Reset page if filter changes
+  // Reset page if filters change
   useEffect(() => {
     setPage(1);
+    router.push(`/products?page=1`);
   }, [category, subcategory]);
 
-  if (loading) {
+  // Handle page change and update URL
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    router.push(`/products?page=${newPage}`);
+  };
+
+  if (loading)
     return (
       <main className="min-h-screen flex justify-center py-12">
         <LoaderCircle className="w-10 h-10 animate-spin text-muted-foreground" />
       </main>
     );
-  }
 
   return (
     <section className="py-16 px-6 bg-background">
       <div className="max-w-7xl mx-auto">
-        {/* Back & Header */}
+        {/* Header */}
         <div className="block md:flex items-center justify-between mb-12">
           <div>
             <Link href="/#top-picks">
               <Button variant="ghost" className="mb-6">
-                <ArrowLeft className="mr-2" size={18} />
-                Back
+                <ArrowLeft className="mr-2" size={18} /> Back
               </Button>
             </Link>
             <h2 className="text-2xl font-bold">All Products</h2>
@@ -112,7 +130,6 @@ export default function SpliterPage() {
 
           {/* Filters */}
           <div className="flex flex-wrap gap-4 mt-4 md:mt-0">
-            {/* Category */}
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger className="w-[220px]">
                 <SelectValue placeholder="Category" />
@@ -126,7 +143,6 @@ export default function SpliterPage() {
               </SelectContent>
             </Select>
 
-            {/* Subcategory */}
             <Select
               value={subcategory}
               onValueChange={setSubcategory}
@@ -157,23 +173,21 @@ export default function SpliterPage() {
           </div>
         )}
 
-        {/* Pagination UI */}
+        {/* Pagination */}
         {totalPages > 1 && (
           <div className="mt-10 flex justify-center items-center gap-4">
             <Button
-              onClick={() => setPage((p) => Math.max(p - 1, 1))}
+              onClick={() => handlePageChange(Math.max(page - 1, 1))}
               disabled={page === 1}
               variant="outline"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
-
             <span className="text-sm">
               Page {page} of {totalPages}
             </span>
-
             <Button
-              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+              onClick={() => handlePageChange(Math.min(page + 1, totalPages))}
               disabled={page === totalPages}
               variant="outline"
             >

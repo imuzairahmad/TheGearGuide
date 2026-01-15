@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import ProductCard from "./product-card";
 import { MappedProduct } from "@/lib/contentful";

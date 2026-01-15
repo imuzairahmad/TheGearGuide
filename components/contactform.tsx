@@ -104,7 +104,7 @@ export default function ContactForm() {
           {isSubmitting ? "Sending..." : "Send Message"}
         </Button>
         {success && (
-          <p className="rounded-md bg-green-500/10 p-3 text-sm text-green-600 dark:text-green-400">
+          <p className="rounded-md font-medium bg-green-500/10 p-3 text-sm text-green-600 dark:text-green-400">
             ✅ Message sent successfully. I’ll get back to you soon.
           </p>
         )}

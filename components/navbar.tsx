@@ -1,10 +1,9 @@
 "use client";
-
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ToggleTheme } from "./toggle-theme";
-import { Button, buttonVariants } from "./ui/button";
+import { buttonVariants } from "./ui/button";
 import Logo from "./logo";
 
 const items = [
