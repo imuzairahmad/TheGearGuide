@@ -23,7 +23,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={poppins.className} suppressHydrationWarning>
-      <body className="transition-colors duration-300">
+      <head>
+        <link rel="icon" href="./vercel.svg" />
+      </head>
+      <body className="bg-gradient-to-b from-background via-background to-background dark:from-background dark:via-background/95 dark:to-background transition-colors duration-300">
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

@@ -8,13 +8,14 @@ import type { MappedProduct } from "@/lib/contentful";
 
 interface ProductCardProps {
   product: MappedProduct;
+  source: "top" | "all";
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, source }: ProductCardProps) {
   return (
-    <Card className="group overflow-hidden hover:shadow-lg transition-shadow duration-300 bg-card dark:bg-card border border-border dark:border-border/50 flex flex-col h-full">
-      <Link href={`/products/${product.slug}`}>
-        <div className="aspect-square overflow-hidden bg-muted dark:bg-muted cursor-pointer">
+    <Card className="group overflow-hidden hover:shadow-lg transition-shadow duration-300   border border-border dark:border-border/50 flex flex-col h-full">
+      <Link href={`/products/${product.slug}?source=${source}`}>
+        <div className="aspect-square overflow-hidden bg-muted  cursor-pointer">
           <Image
             src={product.image || "/placeholder.svg"}
             alt={product.title}
@@ -38,7 +39,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="mt-auto">
           <Button
             asChild
-            className="w-full bg-primary text-primary-foreground dark:bg-primary/90 dark:text-primary-foreground font-medium rounded-lg transition-all duration-300 hover:scale-105 hover:bg-primary/90"
+            className="w-full text-white font-medium rounded-lg transition-all duration-300 hover:scale-105 hover:bg-primary/90"
             size="sm"
           >
             <a
@@ -46,7 +47,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               target="_blank"
               rel="noopener noreferrer"
             >
-              View on Amazon
+              Buy
             </a>
           </Button>
         </div>

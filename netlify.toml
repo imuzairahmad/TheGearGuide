@@ -6,3 +6,12 @@ status = 200
 SECRETS_SCAN_OMIT_KEYS = "CONTENTFUL_SPACE_ID,CONTENTFUL_ACCESS_TOKEN"
 [functions]
 node_bundler = "esbuild"
+
+
+[build]
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200

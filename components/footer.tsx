@@ -51,32 +51,23 @@ export default function Footer() {
     <footer
       className="
         relative overflow-hidden
-        bg-neutral-50 text-neutral-800
-        dark:bg-neutral-950 dark:text-neutral-200
+       bg-background text-foreground border-t border-black/10 dark:border-white/10
       "
     >
-      {/* Curved Top */}
-      <div className="absolute top-0 left-0 w-full overflow-hidden leading-none text-inherit">
-        <svg
-          viewBox="0 0 1440 90"
-          className="block w-full h-[90px]"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="M0,80 C240,10 480,10 720,40 960,70 1200,70 1440,40 L1440,0 L0,0 Z"
-            fill="currentColor"
-          />
-        </svg>
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute top-10 right-10 w-72 h-72 rounded-full bg-primary/5 blur-2xl" />
       </div>
 
-      {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 pt-24 pb-14">
         <div className="grid gap-10 md:grid-cols-3">
           {footerData.map((column, index) => (
             <div key={index}>
               <h3 className="mb-4 text-lg font-semibold">{column.title}</h3>
               {column.description && (
-                <p className="mb-3 text-sm opacity-80">{column.description}</p>
+                <p className="text-sm opacity-80 space-y-1">
+                  {column.description}
+                </p>
               )}
               {column.links && (
                 <ul className="space-y-3 text-sm">

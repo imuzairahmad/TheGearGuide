@@ -37,9 +37,9 @@ export default function ContactForm() {
   });
 
   const onSubmit: SubmitHandler<ContactFormValues> = async (values) => {
-    console.log(values);
     try {
-      const res = await fetch("/api/contact", {
+      const endpoint = "/api/contact";
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
@@ -57,7 +57,10 @@ export default function ContactForm() {
   };
 
   return (
-    <section className="block space-y-20 md:space-y-0 md:grid grid-cols-2 gap-20 max-w-7xl mx-auto my-16 p-6">
+    <section
+      id="contact-form"
+      className="block space-y-20 md:space-y-0 md:grid grid-cols-2 gap-20 max-w-7xl mx-auto my-16 p-6"
+    >
       <div className="space-y-4 md:mb-0">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold">
           Have Something in Mind?
@@ -67,7 +70,7 @@ export default function ContactForm() {
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="space-y-6 max-w-md rounded-xl border p-6 border-neutral-900/10 bg-neutral-100/50 backdrop-blur-lg dark:border-neutral-100/10 dark:bg-neutral-900/50"
+        className="space-y-6 max-w-md rounded-xl border p-6 border-neutral-900/10 backdrop-blur-lg dark:border-neutral-100/10 "
       >
         <div className="space-y-2">
           <Label>Name</Label>
@@ -96,7 +99,7 @@ export default function ContactForm() {
         <Button
           type="submit"
           disabled={isSubmitting || success}
-          className="w-full"
+          className="w-full text-white"
         >
           {isSubmitting ? "Sending..." : "Send Message"}
         </Button>

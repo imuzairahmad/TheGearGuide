@@ -5,6 +5,7 @@ import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ToggleTheme } from "./toggle-theme";
 import { Button, buttonVariants } from "./ui/button";
+import Logo from "./logo";
 
 const items = [
   {
@@ -36,25 +37,7 @@ export default function Navbar() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link
-            href="/"
-            onClick={() =>
-              document
-                .getElementById("home")
-                ?.scrollIntoView({ behavior: "smooth" })
-            }
-            className="flex items-center gap-2"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-              <span className="text-lg font-bold text-primary-foreground">
-                G
-              </span>
-            </div>
-            <span className="hidden font-bold text-foreground sm:inline-block">
-              TheGear<span className="text-primary">Guide</span>
-            </span>
-          </Link>
-
+          <Logo />
           {/* Desktop Navigation */}
           <div className="hidden  md:flex">
             {items.map((item) => (

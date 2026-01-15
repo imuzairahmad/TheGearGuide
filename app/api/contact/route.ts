@@ -1,19 +1,13 @@
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
-import { contactSchema } from "@/lib/validators/contact";
 import { canSendToday } from "@/app/upstash/upstash";
-// import { canSendToday } from "@/lib/rate-limit"; // choose option
+import { contactSchema } from "@/lib/validators/contact";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const parsed = contactSchema.safeParse(body);
 
-    if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
-    }
-
-    const { name, email, message } = parsed.data;
+    const { name, email, message } = contactSchema.parse(body);
 
     const allowed = await canSendToday(email);
     if (!allowed) {
@@ -24,11 +18,11 @@ export async function POST(req: Request) {
     }
 
     const transporter = nodemailer.createTransport({
-      host: process.env.MAILTRAP_HOST,
+      host: process.env.MAILTRAP_HOST!,
       port: Number(process.env.MAILTRAP_PORT),
       auth: {
-        user: process.env.MAILTRAP_USER,
-        pass: process.env.MAILTRAP_PASS,
+        user: process.env.MAILTRAP_USER!,
+        pass: process.env.MAILTRAP_PASS!,
       },
     });
 
@@ -40,8 +34,10 @@ export async function POST(req: Request) {
       text: message,
     });
 
-    return NextResponse.json({ success: true });
-  } catch (err) {
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (error) {
+    console.error("Contact API error:", error);
+
     return NextResponse.json(
       { error: "Failed to send message" },
       { status: 500 }

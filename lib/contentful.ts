@@ -1,25 +1,26 @@
+import { NextResponse } from "next/server";
 import { createClient, Entry, EntrySkeletonType } from "contentful";
 
-export const contentfulClient = createClient({
+const contentfulClient = createClient({
   space: process.env.CONTENTFUL_SPACE_ID || "",
   accessToken: process.env.CONTENTFUL_ACCESS_TOKEN || "",
 });
 
+// --- Types ---
 export interface ProductFields {
   slug: string;
   title: string;
   category: string;
-  image?: {
-    fields: {
-      file: {
-        url: string;
-      };
-    };
-  };
+  subcategory?: string;
+  image?: { fields: { file: { url: string } } };
   amazonUrl: string;
   description: string;
-  isTopPick?: boolean;
   publishedDate?: string;
+  highlights?: string[];
+  specifications?: Record<string, string>;
+  guidelines?: { fields: any; title: string; points: string[] }[];
+  rating?: number;
+  reviewCount?: number;
 }
 
 export type MappedProduct = {
@@ -27,44 +28,86 @@ export type MappedProduct = {
   slug: string;
   title: string;
   category: string;
+  subcategory?: string;
   image: string;
   amazonUrl: string;
   description: string;
+  rating?: number;
+  reviewCount?: number;
+  highlights?: string[];
+  specifications?: Record<string, string>;
+  guidelines?: { title: string; points: string[] }[];
 };
 
+// --- Mapper ---
 export function mapContentfulProduct(
   item: Entry<EntrySkeletonType, undefined, string>
 ): MappedProduct {
   const fields = item.fields as unknown as ProductFields;
+
   return {
     id: item.sys.id,
     slug: fields.slug || item.sys.id,
     title: fields.title,
     category: fields.category,
+    subcategory: fields.subcategory,
     image: fields.image?.fields?.file?.url
       ? `https:${fields.image.fields.file.url}`
       : "/diverse-products-still-life.png",
     amazonUrl: fields.amazonUrl,
     description: fields.description,
+    rating: fields.rating,
+    reviewCount: fields.reviewCount,
+    highlights: fields.highlights,
+    specifications: fields.specifications,
+    guidelines:
+      fields.guidelines?.map((g) => ({
+        title: g.fields.title,
+        points: g.fields.points,
+      })) ?? [],
   };
 }
 
-const MIN_PRODUCTS = 2;
-const DEFAULT_PRODUCTS = 4;
-const MAX_PRODUCTS = 8;
-
-export async function getTopPickProducts(): Promise<MappedProduct[]> {
+// --- Fetch All Products ---
+export async function fetchAllProducts(): Promise<MappedProduct[]> {
   const entries = await contentfulClient.getEntries({
     content_type: "product",
-    // "fields.isTopPick": true,
-    // order: ["-fields.publishedDate"],
-    limit: MAX_PRODUCTS,
+    order: ["-sys.createdAt"], // newest first
+    limit: 100,
+    include: 2,
   });
 
-  const products = entries.items.map(mapContentfulProduct);
+  return entries.items.map(mapContentfulProduct);
+}
 
-  if (products.length >= MAX_PRODUCTS) return products.slice(0, MAX_PRODUCTS);
-  if (products.length >= DEFAULT_PRODUCTS)
-    return products.slice(0, DEFAULT_PRODUCTS);
-  return products.slice(0, MIN_PRODUCTS);
+// --- Fetch Top Picks (first 4 newest) ---
+export async function fetchTopPicks(): Promise<MappedProduct[]> {
+  const allProducts = await fetchAllProducts();
+  return allProducts.slice(0, 4);
+}
+
+// --- API Handler ---
+export const dynamic = "force-dynamic";
+
+export async function GET(req: Request) {
+  try {
+    const url = new URL(req.url);
+    const type = url.searchParams.get("type"); // "top" or "all"
+
+    let products: MappedProduct[] = [];
+
+    if (type === "top") {
+      products = await fetchTopPicks();
+    } else {
+      products = await fetchAllProducts();
+    }
+
+    return NextResponse.json({ products });
+  } catch (error) {
+    console.error("[v0] Contentful fetch error:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch products" },
+      { status: 500 }
+    );
+  }
 }
