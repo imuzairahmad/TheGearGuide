@@ -1,10 +1,23 @@
 import { NextResponse } from "next/server";
-import { createClient, Entry, EntrySkeletonType } from "contentful";
+import {
+  createClient,
+  Entry,
+  EntryFieldTypes,
+  EntrySkeletonType,
+} from "contentful";
 
 const contentfulClient = createClient({
   space: process.env.CONTENTFUL_SPACE_ID || "",
   accessToken: process.env.CONTENTFUL_ACCESS_TOKEN || "",
 });
+
+export interface ScoreSkeleton extends EntrySkeletonType {
+  contentTypeId: "score";
+  fields: {
+    label: EntryFieldTypes.Text;
+    score: EntryFieldTypes.Number;
+  };
+}
 
 // --- Types ---
 export interface ProductFields {
@@ -14,13 +27,16 @@ export interface ProductFields {
   subcategory?: string;
   image?: { fields: { file: { url: string } } };
   amazonUrl: string;
-  description: string;
+  description?: string;
   publishedDate?: string;
   highlights?: string[];
   specifications?: Record<string, string>;
   guidelines?: { fields: any; title: string; points: string[] }[];
   rating?: number;
-  reviewCount?: number;
+  reviewsCount?: number;
+  pros?: string[];
+  cons?: string[];
+  scores?: Entry<ScoreSkeleton>[];
 }
 
 export type MappedProduct = {
@@ -31,17 +47,23 @@ export type MappedProduct = {
   subcategory?: string;
   image: string;
   amazonUrl: string;
-  description: string;
+  description?: string;
   rating?: number;
-  reviewCount?: number;
+  reviewsCount?: number;
   highlights?: string[];
   specifications?: Record<string, string>;
   guidelines?: { title: string; points: string[] }[];
+  pros?: string[];
+  cons?: string[];
+  scores?: {
+    label: string;
+    score: number;
+  }[];
 };
 
 // --- Mapper ---
 export function mapContentfulProduct(
-  item: Entry<EntrySkeletonType, undefined, string>
+  item: Entry<EntrySkeletonType, undefined, string>,
 ): MappedProduct {
   const fields = item.fields as unknown as ProductFields;
 
@@ -55,16 +77,31 @@ export function mapContentfulProduct(
       ? `https:${fields.image.fields.file.url}`
       : "/diverse-products-still-life.png",
     amazonUrl: fields.amazonUrl,
-    description: fields.description,
+    description: fields.description ?? "",
     rating: fields.rating,
-    reviewCount: fields.reviewCount,
+    reviewsCount: fields.reviewsCount,
     highlights: fields.highlights,
     specifications: fields.specifications,
+    pros: Array.isArray(fields.pros) ? fields.pros : [],
+    cons: Array.isArray(fields.cons) ? fields.cons : [],
     guidelines:
       fields.guidelines?.map((g) => ({
         title: g.fields.title,
         points: g.fields.points,
       })) ?? [],
+    scores: Array.isArray(fields.scores)
+      ? fields.scores.map((s) => ({
+          label:
+            typeof s.fields.label === "string"
+              ? s.fields.label
+              : (s.fields.label?.["en-US"] ?? ""),
+
+          score:
+            typeof s.fields.score === "number"
+              ? s.fields.score
+              : Number(s.fields.score?.["en-US"] ?? 0),
+        }))
+      : [],
   };
 }
 
@@ -72,7 +109,8 @@ export function mapContentfulProduct(
 export async function fetchAllProducts(): Promise<MappedProduct[]> {
   const entries = await contentfulClient.getEntries({
     content_type: "product",
-    order: ["-sys.createdAt"], // newest first
+    order: ["-sys.createdAt"],
+    locale: "en-US",
     limit: 100,
     include: 2,
   });
@@ -107,7 +145,7 @@ export async function GET(req: Request) {
     console.error("[v0] Contentful fetch error:", error);
     return NextResponse.json(
       { error: "Failed to fetch products" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

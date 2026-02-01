@@ -7,8 +7,16 @@ import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Star, ArrowLeft, LoaderCircle } from "lucide-react";
+import {
+  Star,
+  ArrowLeft,
+  LoaderCircle,
+  XCircle,
+  CheckCircle,
+} from "lucide-react";
+
 import type { MappedProduct } from "@/lib/contentful";
+import ScoreBar from "@/components/ui/scorebar";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -22,7 +30,7 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch product by slug
+  // Fetch product
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -39,34 +47,44 @@ export default function ProductDetailPage() {
     fetchProduct();
   }, [slug]);
 
-  if (loading)
+  // Loading state
+  if (loading) {
     return (
-      <main className="min-h-screen bg-background px-4 py-8 flex justify-center items-center">
-        <LoaderCircle className="animate-spin w-10 h-10 text-muted-foreground" />
+      <main className="min-h-screen flex items-center justify-center">
+        <LoaderCircle className="w-10 h-10 animate-spin text-muted-foreground" />
       </main>
     );
+  }
 
-  if (error || !product)
+  // Error state
+  if (error || !product) {
     return (
-      <main className="min-h-screen bg-background px-4 py-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-3xl font-bold mb-4 text-foreground">
-            Product Not Found
-          </h1>
-          <p className="text-muted-foreground mb-8">{error}</p>
+      <main className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold mb-4">Product Not Found</h1>
+          <p className="text-muted-foreground mb-6">{error}</p>
           <Button onClick={() => router.back()}>Go Back</Button>
         </div>
       </main>
     );
+  }
 
   const rating = product.rating || 0;
-  const reviewCount = product.reviewCount || 0;
+  const reviewsCount = product.reviewsCount || 0;
   const category = product.category || "Uncategorized";
   const subcategory = product.subcategory || "Uncategorized";
 
+  // ✅ OVERALL SCORE CALCULATION
+  const overallScore = product.scores?.length
+    ? (
+        product.scores.reduce((sum, s) => sum + s.score, 0) /
+        product.scores.length
+      ).toFixed(1)
+    : null;
+
   return (
     <main className="min-h-screen bg-background">
-      <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Back Button */}
         <Button
           variant="ghost"
@@ -75,125 +93,146 @@ export default function ProductDetailPage() {
             router.push(source === "all" ? "/products" : "/#top-picks")
           }
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={18} />
           Back
         </Button>
 
-        {/* Breadcrumb / Category Path */}
+        {/* Breadcrumb */}
         <div className="mb-6 text-sm text-muted-foreground">
           <Link href="/products" className="hover:underline">
-            All Products
+            Products
           </Link>{" "}
           / <span>{category}</span> / <span>{subcategory}</span>
         </div>
 
-        {/* Product Info Grid */}
+        {/* Main Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-12">
-          {/* Product Image */}
+          {/* Image */}
           <div className="flex items-center justify-center bg-muted rounded-lg p-8">
-            {/* <Zoom> */}
             <Image
               src={product.image || "/placeholder.svg"}
               alt={product.title}
               width={400}
               height={400}
-              className="w-full h-full object-cover object-center rounded-lg"
+              className="rounded-lg object-cover"
             />
-            {/* </Zoom> */}
           </div>
 
-          {/* Product Details */}
+          {/* Details */}
           <div>
-            {/* Category Badge */}
-            <div className="mb-4 flex flex-wrap gap-2">
-              <span className="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
+            {/* Badges */}
+            <div className="flex gap-2 mb-4">
+              <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
                 {category}
               </span>
               {subcategory !== "Uncategorized" && (
-                <span className="inline-block px-3 py-1 bg-secondary/10 text-secondary rounded-full text-sm font-medium">
+                <span className="px-3 py-1 bg-secondary/10 text-secondary rounded-full text-sm">
                   {subcategory}
                 </span>
               )}
             </div>
 
             {/* Title */}
-            <h1 className="text-3xl font-bold text-foreground mb-4">
-              {product.title}
-            </h1>
+            <h1 className="text-3xl font-bold mb-4">{product.title}</h1>
 
-            {/* Rating & Reviews */}
-            <div className="flex items-center gap-4 mb-6">
-              <div className="flex items-center gap-1">
+            {/* Rating */}
+            {/* <div className="flex items-center gap-4 mb-6">
+              <div className="flex gap-1">
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
                     size={20}
-                    className={`${
+                    className={
                       i < Math.floor(rating)
                         ? "text-yellow-400"
                         : "text-muted-foreground"
-                    }`}
+                    }
                     fill={i < Math.floor(rating) ? "#FBBF24" : "none"}
                   />
                 ))}
               </div>
-              <span className="text-lg font-semibold text-foreground">
-                {rating.toFixed(1)}
-              </span>
-              <span className="text-muted-foreground">({reviewCount})</span>
-            </div>
+              <span className="font-semibold">{rating}</span>
+              <span className="text-muted-foreground">({reviewsCount})</span>
+            </div> */}
 
             {/* Description */}
             <p className="text-muted-foreground mb-6">
               {product.description || "No description available."}
             </p>
 
-            {/* Amazon Button */}
+            {/* Amazon */}
             {product.amazonUrl && (
               <a
                 href={product.amazonUrl}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Button
-                  size="lg"
-                  className="w-full text-white font-medium rounded-lg transition-all duration-300 hover:scale-105 hover:bg-primary/90"
-                >
-                  View on Amazon
+                <Button className="w-full mb-6 text-white">
+                  Check Price at Amazon
                 </Button>
               </a>
+            )}
+
+            {/* SCORES */}
+            {product.scores?.length && (
+              <Card className="p-6 bg-primary/5 text-white border-none">
+                {/* Overall Score */}
+                {overallScore && (
+                  <div className="flex items-center gap-6 mb-6">
+                    <div className="bg-primary text-white px-4 py-3 rounded-lg text-center">
+                      <div className="text-4xl font-bold">{overallScore}</div>
+                      <div className="text-xs uppercase opacity-80">
+                        Overall Scores
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Individual Scores */}
+                <div className="space-y-4">
+                  {product.scores.map((s, i) => (
+                    <ScoreBar key={i} label={s.label} score={s.score} />
+                  ))}
+                </div>
+              </Card>
             )}
           </div>
         </div>
 
-        {/* Extra Info Cards */}
+        {/* Pros & Cons */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Pros */}
           <Card className="p-6 bg-primary/90 text-white border-none">
-            <h3 className="text-xl font-bold mb-4">Guidelines</h3>
-            {/* {product.guidelines?.length ? (
-              <ul className="space-y-2">
-                {product.guidelines.map((g, idx) => (
-                  <li key={idx}>
-                    <strong>{g.title}: </strong> {g.points.join(", ")}
+            <h3 className="text-xl font-bold">Pros</h3>
+            <ul className="space-y-2">
+              {product.pros?.length ? (
+                product.pros.map((pro, i) => (
+                  <li key={i} className="flex gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-300" />
+                    {pro}
                   </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No guidelines available.</p>
-            )} */}
+                ))
+              ) : (
+                <li>No pros available.</li>
+              )}
+            </ul>
           </Card>
 
+          {/* Cons */}
           <Card className="p-6 bg-primary/5 border-none">
-            <h3 className="text-xl font-bold mb-4">Highlights</h3>
-            {/* {product.highlights?.length ? (
-              <ul className="space-y-2">
-                {product.highlights.map((h, idx) => (
-                  <li key={idx}>• {h}</li>
-                ))}
-              </ul>
-            ) : (
-              <p>No highlights available.</p>
-            )} */}
+            <h3 className="text-xl font-bold">Cons</h3>
+            <ul className="space-y-2">
+              {product.cons?.length ? (
+                product.cons.map((con, i) => (
+                  <li key={i} className="flex gap-2">
+                    <XCircle className="w-5 h-5 text-red-500" />
+                    {con}
+                  </li>
+                ))
+              ) : (
+                <li>No cons available.</li>
+              )}
+            </ul>
           </Card>
         </div>
       </div>

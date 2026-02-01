@@ -10,7 +10,7 @@ const client = createClient({
 
 export async function GET(
   _req: Request,
-  { params }: { params: { slug: string } }
+  { params }: { params: { slug: string } },
 ) {
   try {
     const slug = params.slug;
@@ -23,6 +23,7 @@ export async function GET(
       content_type: "product",
       "fields.slug": slug,
       limit: 1,
+      include: 2,
     });
 
     if (!entries.items.length) {
@@ -35,7 +36,7 @@ export async function GET(
     console.error("Product fetch error:", error);
     return NextResponse.json(
       { error: "Failed to fetch product" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -23,7 +23,7 @@ export default function ProductGrid({ type = "top" }: ProductGridProps) {
     const fetchProducts = async () => {
       try {
         const res = await fetch(
-          `/api/products/list?type=${type}&page=${page}&limit=${PAGE_SIZE}`
+          `/api/products/list?type=${type}&page=${page}&limit=${PAGE_SIZE}`,
         );
         if (!res.ok) throw new Error("Fetch failed");
         const data = await res.json();
@@ -76,7 +76,7 @@ export default function ProductGrid({ type = "top" }: ProductGridProps) {
                 >
                   {i + 1}
                 </Button>
-              )
+              ),
             )}
           </div>
         )}

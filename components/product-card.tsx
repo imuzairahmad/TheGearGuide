@@ -46,7 +46,7 @@ export default function ProductCard({ product, source }: ProductCardProps) {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Buy
+              Check Price at Amazon
             </a>
           </Button>
         </div>
