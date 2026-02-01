@@ -17,6 +17,7 @@ import {
 
 import type { MappedProduct } from "@/lib/contentful";
 import ScoreBar from "@/components/ui/scorebar";
+import Description from "@/components/ui/description";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -155,11 +156,6 @@ export default function ProductDetailPage() {
               <span className="text-muted-foreground">({reviewsCount})</span>
             </div> */}
 
-            {/* Description */}
-            <p className="text-muted-foreground mb-6">
-              {product.description || "No description available."}
-            </p>
-
             {/* Amazon */}
             {product.amazonUrl && (
               <a
@@ -204,35 +200,39 @@ export default function ProductDetailPage() {
           {/* Pros */}
           <Card className="p-6 bg-primary/90 text-white border-none">
             <h3 className="text-xl font-bold">Pros</h3>
-            <ul className="space-y-2">
-              {product.pros?.length ? (
-                product.pros.map((pro, i) => (
+            {product.pros ? (
+              <ul className="space-y-2">
+                {product.pros.split("\n").map((pro, i) => (
                   <li key={i} className="flex gap-2">
                     <CheckCircle className="w-5 h-5 text-green-300" />
                     {pro}
                   </li>
-                ))
-              ) : (
-                <li>No pros available.</li>
-              )}
-            </ul>
+                ))}
+              </ul>
+            ) : (
+              <p>No pros available.</p>
+            )}
           </Card>
 
           {/* Cons */}
           <Card className="p-6 bg-primary/5 border-none">
             <h3 className="text-xl font-bold">Cons</h3>
-            <ul className="space-y-2">
-              {product.cons?.length ? (
-                product.cons.map((con, i) => (
+            {product.cons ? (
+              <ul className="space-y-2">
+                {product.cons.split("\n").map((con, i) => (
                   <li key={i} className="flex gap-2">
                     <XCircle className="w-5 h-5 text-red-500" />
                     {con}
                   </li>
-                ))
-              ) : (
-                <li>No cons available.</li>
-              )}
-            </ul>
+                ))}
+              </ul>
+            ) : (
+              <p>No cons available.</p>
+            )}
+          </Card>
+          <Card className="p-6 bg-primary/5 border-none overflow-hidden">
+            <h3 className="text-xl font-bold">Description</h3>
+            <Description text={product.description} />
           </Card>
         </div>
       </div>

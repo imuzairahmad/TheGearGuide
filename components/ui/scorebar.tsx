@@ -9,7 +9,9 @@ export default function ScoreBar({ label, score }: ScoreBarProps) {
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-sm font-medium">
-        <span className="uppercase tracking-wide">{label}</span>
+        <span className="uppercase tracking-wide text-black dark:text-white">
+          {label}
+        </span>
         <span>{score.toFixed(1)}</span>
       </div>
 
