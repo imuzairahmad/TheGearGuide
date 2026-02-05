@@ -36,6 +36,7 @@ export interface ProductFields {
   reviewsCount?: number;
   pros?: string;
   cons?: string;
+  keyPoints?: string;
   scores?: Entry<ScoreSkeleton>[];
 }
 
@@ -55,6 +56,8 @@ export type MappedProduct = {
   guidelines?: { title: string; points: string[] }[];
   pros?: string;
   cons?: string;
+  keyPoints?: string;
+
   scores?: {
     label: string;
     score: number;
@@ -84,6 +87,7 @@ export function mapContentfulProduct(
     specifications: fields.specifications,
     pros: fields.pros ?? "",
     cons: fields.cons ?? "",
+    keyPoints: fields.keyPoints ?? "",
     guidelines:
       fields.guidelines?.map((g) => ({
         title: g.fields.title,

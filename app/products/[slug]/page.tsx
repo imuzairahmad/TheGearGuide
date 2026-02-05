@@ -8,16 +8,20 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
-  Star,
   ArrowLeft,
   LoaderCircle,
   XCircle,
   CheckCircle,
+  ChevronDown,
+  ShieldQuestionMark,
+  UserCheck,
+  UserX,
 } from "lucide-react";
 
 import type { MappedProduct } from "@/lib/contentful";
 import ScoreBar from "@/components/ui/scorebar";
 import Description from "@/components/ui/description";
+import { ProductFAQ } from "@/components/ui/faqs";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -70,8 +74,8 @@ export default function ProductDetailPage() {
     );
   }
 
-  const rating = product.rating || 0;
-  const reviewsCount = product.reviewsCount || 0;
+  // const rating = product.rating || 0;
+  // const reviewsCount = product.reviewsCount || 0;
   const category = product.category || "Uncategorized";
   const subcategory = product.subcategory || "Uncategorized";
 
@@ -169,29 +173,11 @@ export default function ProductDetailPage() {
               </a>
             )}
 
-            {/* SCORES */}
-            {product.scores?.length && (
-              <Card className="p-6 bg-primary/5 text-white border-none">
-                {/* Overall Score */}
-                {overallScore && (
-                  <div className="flex items-center gap-6 mb-6">
-                    <div className="bg-primary text-white px-4 py-3 rounded-lg text-center">
-                      <div className="text-4xl font-bold">{overallScore}</div>
-                      <div className="text-xs uppercase opacity-80">
-                        Overall Scores
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Individual Scores */}
-                <div className="space-y-4">
-                  {product.scores.map((s, i) => (
-                    <ScoreBar key={i} label={s.label} score={s.score} />
-                  ))}
-                </div>
-              </Card>
-            )}
+            {/* Description */}
+            <Card className="p-6 bg-primary/5 border-none overflow-hidden">
+              <h3 className="text-xl font-bold">Description</h3>
+              <Description text={product.description} />
+            </Card>
           </div>
         </div>
 
@@ -230,9 +216,66 @@ export default function ProductDetailPage() {
               <p>No cons available.</p>
             )}
           </Card>
-          <Card className="p-6 bg-primary/5 border-none overflow-hidden">
-            <h3 className="text-xl font-bold">Description</h3>
-            <Description text={product.description} />
+          {/* SCORES */}
+          {product.scores?.length && (
+            <Card className="p-6 bg-primary/5 text-white border-none">
+              {/* Overall Score */}
+              {overallScore && (
+                <div className="flex items-center gap-6 mb-6">
+                  <div className="bg-primary text-white px-4 py-3 rounded-lg text-center">
+                    <div className="text-4xl font-bold">{overallScore}</div>
+                    <div className="text-xs uppercase opacity-80">
+                      Overall Scores
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Individual Scores */}
+              <div className="space-y-4">
+                {product.scores.map((s, i) => (
+                  <ScoreBar key={i} label={s.label} score={s.score} />
+                ))}
+              </div>
+            </Card>
+          )}
+          {/* Key Points */}
+          <Card className="p-6 bg-primary/5 border-none">
+            <h3 className="text-xl font-bold">Key Points</h3>
+            {product.keyPoints ? (
+              <ul className="space-y-2">
+                {product.keyPoints.split("\n").map((point, i) => (
+                  <li key={i} className="flex gap-2">
+                    <ChevronDown className="w-5 h-5 text-green-300" />
+                    {point}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No key points available.</p>
+            )}
+          </Card>
+
+          {/* Questions */}
+          <Card className="p-6 bg-primary/5 border-none">
+            <h3 className="font-bold flex items-center gap-2">
+              Who This Product Is For{" "}
+              <UserCheck className="w-5 h-5 text-green-500" /> / Not For{" "}
+              <UserX className="w-5 h-5 text-red-500" />
+            </h3>
+            <p>
+              Amazon wants honest recommendations, not hype. Example: This
+              product is ideal for small home use and beginners. It may not be
+              suitable for professional or heavy-duty work.
+            </p>
+          </Card>
+          {/* Faqs */}
+          <Card className="p-6 bg-primary/5 border-none">
+            <h3 className="font-bold flex items-center gap-2">
+              <ShieldQuestionMark className="w-5 h-5 text-blue-500" />
+              FAQs About This Product
+            </h3>
+            <ProductFAQ />
           </Card>
         </div>
       </div>
