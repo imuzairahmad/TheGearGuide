@@ -256,18 +256,6 @@ export default function ProductDetailPage() {
             )}
           </Card>
 
-          {/* Questions */}
-          <Card className="p-6 bg-primary/5 border-none">
-            <h3 className="font-bold flex items-center gap-2">
-              Who This Product Is For{" "}
-              <UserCheck className="w-5 h-5 text-green-500" /> / Not For{" "}
-              <UserX className="w-5 h-5 text-red-500" />
-            </h3>
-            <p>
-              {product.question ||
-                "No specific target audience information available."}
-            </p>
-          </Card>
           {/* Faqs */}
           <Card className="p-6 bg-primary/5 border-none">
             <h3 className="font-bold flex items-center gap-2">
