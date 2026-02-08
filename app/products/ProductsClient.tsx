@@ -13,7 +13,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { LoaderCircle, ArrowLeft, ArrowRight } from "lucide-react";
-import type { MappedProduct } from "@/lib/contentful";
+import { MappedProduct } from "@/lib/contentfull";
 
 const PAGE_SIZE = 12;
 
@@ -55,7 +55,7 @@ export default function ProductsClient() {
   /* ------------------------------- categories -------------------------------- */
   const categories = useMemo(
     () => ["All", ...new Set(allProducts.map((p) => p.category))],
-    [allProducts]
+    [allProducts],
   );
 
   const subcategories = useMemo(() => {
@@ -65,7 +65,7 @@ export default function ProductsClient() {
       ...new Set(
         allProducts
           .filter((p) => p.category === category)
-          .map((p) => p.subcategory || "Uncategorized")
+          .map((p) => p.subcategory || "Uncategorized"),
       ),
     ];
   }, [allProducts, category]);

@@ -18,10 +18,10 @@ import {
   UserX,
 } from "lucide-react";
 
-import type { MappedProduct } from "@/lib/contentful";
 import ScoreBar from "@/components/ui/scorebar";
 import Description from "@/components/ui/description";
 import { ProductFAQ } from "@/components/ui/faqs";
+import { MappedFaq, MappedProduct } from "@/lib/contentfull";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -264,9 +264,8 @@ export default function ProductDetailPage() {
               <UserX className="w-5 h-5 text-red-500" />
             </h3>
             <p>
-              Amazon wants honest recommendations, not hype. Example: This
-              product is ideal for small home use and beginners. It may not be
-              suitable for professional or heavy-duty work.
+              {product.question ||
+                "No specific target audience information available."}
             </p>
           </Card>
           {/* Faqs */}
@@ -275,7 +274,7 @@ export default function ProductDetailPage() {
               <ShieldQuestionMark className="w-5 h-5 text-blue-500" />
               FAQs About This Product
             </h3>
-            <ProductFAQ />
+            <ProductFAQ faqs={product.faqs ?? []} />
           </Card>
         </div>
       </div>

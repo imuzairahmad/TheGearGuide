@@ -5,57 +5,26 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-export function ProductFAQ() {
+interface ProductFAQProps {
+  faqs: {
+    id: string;
+    question: string;
+    answer: string;
+  }[];
+}
+export function ProductFAQ({ faqs }: ProductFAQProps) {
+  if (!faqs || faqs.length === 0) {
+    return <p className="text-sm text-muted-foreground">No FAQs available.</p>;
+  }
+
   return (
-    <Accordion type="single" collapsible className="w-full">
-      <AccordionItem value="item-1">
-        <AccordionTrigger>
-          Who is this product best suited for?
-        </AccordionTrigger>
-        <AccordionContent>
-          This product is ideal for small home use and beginners who need a
-          simple, easy-to-use solution.
-        </AccordionContent>
-      </AccordionItem>
-
-      <AccordionItem value="item-2">
-        <AccordionTrigger>
-          Is this product suitable for professional or heavy-duty use?
-        </AccordionTrigger>
-        <AccordionContent>
-          No. It is not intended for professional environments or heavy-duty
-          continuous usage.
-        </AccordionContent>
-      </AccordionItem>
-
-      <AccordionItem value="item-3">
-        <AccordionTrigger>
-          Can beginners use this product easily?
-        </AccordionTrigger>
-        <AccordionContent>
-          Yes. The product does not require advanced skills and is easy to
-          operate.
-        </AccordionContent>
-      </AccordionItem>
-
-      <AccordionItem value="item-4">
-        <AccordionTrigger>
-          What are the limitations of this product?
-        </AccordionTrigger>
-        <AccordionContent>
-          It may not be suitable for long working hours or high-performance
-          tasks.
-        </AccordionContent>
-      </AccordionItem>
-
-      <AccordionItem value="item-5">
-        <AccordionTrigger>
-          Is it reliable for everyday casual use?
-        </AccordionTrigger>
-        <AccordionContent>
-          Yes. It works well for light, occasional, and everyday home use.
-        </AccordionContent>
-      </AccordionItem>
+    <Accordion type="single" collapsible className="max-w-lg">
+      {faqs.map((faq) => (
+        <AccordionItem key={faq.id} value={faq.id}>
+          <AccordionTrigger>{faq.question}</AccordionTrigger>
+          <AccordionContent>{faq.answer}</AccordionContent>
+        </AccordionItem>
+      ))}
     </Accordion>
   );
 }

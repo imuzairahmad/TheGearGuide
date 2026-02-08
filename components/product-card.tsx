@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import type { MappedProduct } from "@/lib/contentful";
+import { MappedProduct } from "@/lib/contentfull";
 
 interface ProductCardProps {
   product: MappedProduct;

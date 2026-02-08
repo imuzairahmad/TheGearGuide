@@ -1,8 +1,7 @@
 // app/api/products/[slug]/route.ts
 import { NextResponse } from "next/server";
 import { createClient } from "contentful";
-import { mapContentfulProduct } from "@/lib/contentful";
-
+import { mapContentfulProduct } from "@/lib/contentfull/mappers/mapProduct";
 const client = createClient({
   space: process.env.CONTENTFUL_SPACE_ID!,
   accessToken: process.env.CONTENTFUL_ACCESS_TOKEN!,
@@ -24,6 +23,7 @@ export async function GET(
       "fields.slug": slug,
       limit: 1,
       include: 2,
+      locale: "en-US",
     });
 
     if (!entries.items.length) {

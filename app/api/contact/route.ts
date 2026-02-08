@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     if (!allowed) {
       return NextResponse.json(
         { error: "Daily limit reached (2 messages per day)" },
-        { status: 429 }
+        { status: 429 },
       );
     }
 
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       { error: "Failed to send message" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

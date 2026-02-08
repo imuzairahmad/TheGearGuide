@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import ProductCard from "./product-card";
-import { MappedProduct } from "@/lib/contentful";
+import { MappedProduct } from "@/lib/contentfull";
 import { LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
