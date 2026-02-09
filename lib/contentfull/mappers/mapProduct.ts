@@ -2,6 +2,7 @@ import { Entry, EntrySkeletonType } from "contentful";
 import { ProductFields, MappedProduct } from "../types/product";
 import { mapScore } from "./mapScore";
 import { mapFaq } from "./mapFaq";
+import { notNull } from "@/lib/utils";
 
 export function mapContentfulProduct(
   entry: Entry<EntrySkeletonType>,
@@ -25,7 +26,13 @@ export function mapContentfulProduct(
     cons: fields.cons ?? "",
     keyPoints: fields.keyPoints ?? "",
     question: fields.question ?? "",
-    scores: Array.isArray(fields.scores) ? fields.scores.map(mapScore) : [],
-    faqs: Array.isArray(fields.faqs) ? fields.faqs.map(mapFaq) : [],
+
+    scores: Array.isArray(fields.scores)
+      ? fields.scores.map(mapScore).filter(notNull)
+      : [],
+
+    faqs: Array.isArray(fields.faqs)
+      ? fields.faqs.map(mapFaq).filter(notNull)
+      : [],
   };
 }

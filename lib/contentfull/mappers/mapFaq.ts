@@ -1,20 +1,18 @@
-// mapFaq.ts
 import { Entry } from "contentful";
 import { FaqSkeleton, MappedFaq } from "../types/faq";
+import { getString } from "../getString";
 
-export function mapFaq(entry: Entry<FaqSkeleton>): MappedFaq {
-  const fields = entry.fields;
+export function mapFaq(entry?: Entry<FaqSkeleton> | null): MappedFaq | null {
+  if (!entry || !entry.fields) return null;
+
+  const question = getString(entry.fields.question);
+  const answer = getString(entry.fields.answer);
+
+  if (!question || !answer) return null;
+
   return {
     id: entry.sys.id,
-    // If localized, get en-US, otherwise fallback to string or empty
-    question:
-      typeof fields.question === "string"
-        ? fields.question
-        : (fields.question?.["en-US"] ?? ""),
-
-    answer:
-      typeof fields.answer === "string"
-        ? fields.answer
-        : (fields.answer?.["en-US"] ?? ""),
+    question,
+    answer,
   };
 }

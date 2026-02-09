@@ -23,7 +23,6 @@ export async function GET(
       "fields.slug": slug,
       limit: 1,
       include: 2,
-      locale: "en-US",
     });
 
     if (!entries.items.length) {
