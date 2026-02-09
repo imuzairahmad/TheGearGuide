@@ -185,13 +185,13 @@ export default function ProductDetailPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Pros */}
           <Card className="p-6 bg-primary/90 text-white border-none">
-            <h3 className="text-xl font-bold">Pros</h3>
+            <h3 className="text-xl font-bold mb-2">Pros</h3>
             {product.pros ? (
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {product.pros.split("\n").map((pro, i) => (
-                  <li key={i} className="flex gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-300" />
-                    {pro}
+                  <li key={i} className="flex items-start gap-2">
+                    <CheckCircle className="w-5 h-5 flex-shrink-0 mt-1 text-green-300" />
+                    <span className="leading-relaxed">{pro}</span>
                   </li>
                 ))}
               </ul>
@@ -202,13 +202,13 @@ export default function ProductDetailPage() {
 
           {/* Cons */}
           <Card className="p-6 bg-primary/5 border-none">
-            <h3 className="text-xl font-bold">Cons</h3>
+            <h3 className="text-xl font-bold mb-2">Cons</h3>
             {product.cons ? (
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {product.cons.split("\n").map((con, i) => (
-                  <li key={i} className="flex gap-2">
-                    <XCircle className="w-5 h-5 text-red-500" />
-                    {con}
+                  <li key={i} className="flex items-start gap-2">
+                    <XCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-1" />
+                    <span className="leading-relaxed">{con}</span>
                   </li>
                 ))}
               </ul>
@@ -245,9 +245,9 @@ export default function ProductDetailPage() {
             {product.keyPoints ? (
               <ul className="space-y-2">
                 {product.keyPoints.split("\n").map((point, i) => (
-                  <li key={i} className="flex gap-2">
-                    <ChevronDown className="w-5 h-5 text-green-300" />
-                    {point}
+                  <li key={i} className="flex items-start gap-2">
+                    <ChevronDown className="w-5 h-5 text-green-300 flex-shrink-0 mt-1" />
+                    <span className="leading-relaxed">{point}</span>
                   </li>
                 ))}
               </ul>
