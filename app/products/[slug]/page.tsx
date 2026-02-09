@@ -5,7 +5,7 @@ import { useParams, useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   ArrowLeft,
@@ -162,15 +162,14 @@ export default function ProductDetailPage() {
 
             {/* Amazon */}
             {product.amazonUrl && (
-              <a
+              <Link
                 href={product.amazonUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                className={`${buttonVariants({ variant: "default" })} w-full mb-6 text-white`}
               >
-                <Button className="w-full mb-6 text-white">
-                  Check Price at Amazon
-                </Button>
-              </a>
+                Check Price at Amazon
+              </Link>
             )}
 
             {/* Description */}

@@ -6,6 +6,9 @@ export const redis = new Redis({
 });
 
 export async function canSendToday(email: string) {
+  if (process.env.NODE_ENV === "development") {
+    return true; // always allow in dev
+  }
   const today = new Date().toISOString().slice(0, 10);
   const key = `contact:${email}:${today}`;
 
