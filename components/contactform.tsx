@@ -12,7 +12,7 @@ import React, { useEffect } from "react";
 
 export default function ContactForm() {
   const [success, setSuccess] = React.useState(false);
-
+  const [error, setError] = React.useState<string | null>(null);
   //
   useEffect(() => {
     if (success) {
@@ -38,21 +38,25 @@ export default function ContactForm() {
 
   const onSubmit: SubmitHandler<ContactFormValues> = async (values) => {
     try {
-      const endpoint = "/api/contact";
-      const res = await fetch(endpoint, {
+      setError(null);
+
+      const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        throw new Error("Failed to send message");
+        throw new Error(data.error || "Failed to send message");
       }
 
       reset();
       setSuccess(true);
     } catch (err) {
       console.error(err);
+      setError(err instanceof Error ? err.message : "Something went wrong");
     }
   };
 
@@ -103,6 +107,11 @@ export default function ContactForm() {
         >
           {isSubmitting ? "Sending..." : "Send Message"}
         </Button>
+        {error && (
+          <p className="rounded-md bg-red-500/10 p-3 text-sm text-red-600 dark:text-red-400">
+            ❌ {error}
+          </p>
+        )}
         {success && (
           <p className="rounded-md font-medium bg-green-500/10 p-3 text-sm text-green-600 dark:text-green-400">
             ✅ Message sent successfully. I’ll get back to you soon.
