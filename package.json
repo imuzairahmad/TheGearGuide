@@ -9,10 +9,9 @@
     "lint": "eslint"
   },
   "engines": {
-    "node": "18.x"
+    "node": "24.x"
   },
   "dependencies": {
-    "24": "^0.0.0",
     "@hookform/resolvers": "^5.2.2",
     "@netlify/functions": "^5.1.2",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
