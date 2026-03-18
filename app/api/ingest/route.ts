@@ -38,6 +38,7 @@ export async function POST(req: Request) {
         url,
         slug: "",
         affiliateLink: "",
+        from: "api", //
       });
       await redisConnection.set(
         `product:${hash}`,
@@ -52,7 +53,10 @@ export async function POST(req: Request) {
       );
     }
 
-    return NextResponse.json({ message: "Queued successfully", jobId: job.id });
+    return NextResponse.json({
+      message: "Queued successfully",
+      jobId: job.status,
+    });
   } catch (err) {
     const message =
       err instanceof z.ZodError

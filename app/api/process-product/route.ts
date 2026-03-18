@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { processProductWorkflow } from "@/lib/modules/product/product.workflow";
 
 export async function POST(req: Request) {
   try {
@@ -16,4 +15,7 @@ export async function POST(req: Request) {
       { status: 500 },
     );
   }
+}
+function processProductWorkflow(body: any) {
+  throw new Error("Function not implemented.");
 }

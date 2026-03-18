@@ -216,29 +216,6 @@ export default function ProductDetailPage() {
             )}
           </Card>
 
-          {/* SCORES */}
-          {product.scores?.length && (
-            <Card className="p-6 bg-primary/5 text-white border-none">
-              {/* Overall Score */}
-              {overallScore && (
-                <div className="flex items-center gap-6 mb-6">
-                  <div className="bg-primary text-white px-4 py-3 rounded-lg text-center">
-                    <div className="text-4xl font-bold">{overallScore}</div>
-                    <div className="text-xs uppercase opacity-80">
-                      Overall Scores
-                    </div>
-                  </div>
-                </div>
-              )}
-              Individual Scores
-              <div className="space-y-4">
-                {product.scores.map((s, i) => (
-                  <ScoreBar key={i} label={s.label} score={s.score} />
-                ))}
-              </div>
-            </Card>
-          )}
-
           {/* Key Points
           <Card className="p-6 bg-primary/5 border-none">
             <h3 className="text-xl font-bold">Key Points</h3>
@@ -257,15 +234,40 @@ export default function ProductDetailPage() {
           </Card> */}
 
           {/* Faqs */}
-          <Card className="p-6 bg-primary/5 border-none">
+          {/* <Card className="p-6 bg-primary/5 border-none">
             <h3 className="font-bold flex items-center gap-2">
               <ShieldQuestionMark className="w-5 h-5 text-blue-500" />
               FAQs About This Product
             </h3>
             <ProductFAQ faqs={product.faqs ?? []} />
-          </Card>
+          </Card> */}
         </div>
       </div>
     </main>
   );
 }
+
+// {
+//   /* SCORES */
+// }
+// {
+//   product.scores?.length && (
+//     <Card className="p-6 bg-primary/5 text-white border-none">
+//       {/* Overall Score */}
+//       {overallScore && (
+//         <div className="flex items-center gap-6 mb-6">
+//           <div className="bg-primary text-white px-4 py-3 rounded-lg text-center">
+//             <div className="text-4xl font-bold">{overallScore}</div>
+//             <div className="text-xs uppercase opacity-80">Overall Scores</div>
+//           </div>
+//         </div>
+//       )}
+//       Individual Scores
+//       <div className="space-y-4">
+//         {product.scores.map((s, i) => (
+//           <ScoreBar key={i} label={s.label} score={s.score} />
+//         ))}
+//       </div>
+//     </Card>
+//   );
+// }

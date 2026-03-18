@@ -14,7 +14,12 @@ function generateJobId(asin: string) {
 }
 
 export async function addProductToQueue(data: ProductQueueJob) {
-  const jobId = generateJobId(data.asin);
+  const jobData = {
+    ...data,
+    from: data.from ?? "unknown",
+  };
+
+  const jobId = generateJobId(jobData.asin);
 
   // 🔥 HARD BLOCK duplicate jobs
   const existingJob = await productQueue.getJob(jobId);
