@@ -21,7 +21,7 @@ import {
 import ScoreBar from "@/components/ui/scorebar";
 import Description from "@/components/ui/description";
 import { ProductFAQ } from "@/components/ui/faqs";
-import { MappedFaq, MappedProduct } from "@/lib/contentfull";
+import { MappedProduct } from "@/lib/modules";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -215,6 +215,7 @@ export default function ProductDetailPage() {
               <p>No cons available.</p>
             )}
           </Card>
+
           {/* SCORES */}
           {product.scores?.length && (
             <Card className="p-6 bg-primary/5 text-white border-none">
@@ -229,8 +230,7 @@ export default function ProductDetailPage() {
                   </div>
                 </div>
               )}
-
-              {/* Individual Scores */}
+              Individual Scores
               <div className="space-y-4">
                 {product.scores.map((s, i) => (
                   <ScoreBar key={i} label={s.label} score={s.score} />
@@ -238,7 +238,8 @@ export default function ProductDetailPage() {
               </div>
             </Card>
           )}
-          {/* Key Points */}
+
+          {/* Key Points
           <Card className="p-6 bg-primary/5 border-none">
             <h3 className="text-xl font-bold">Key Points</h3>
             {product.keyPoints ? (
@@ -253,7 +254,7 @@ export default function ProductDetailPage() {
             ) : (
               <p>No key points available.</p>
             )}
-          </Card>
+          </Card> */}
 
           {/* Faqs */}
           <Card className="p-6 bg-primary/5 border-none">

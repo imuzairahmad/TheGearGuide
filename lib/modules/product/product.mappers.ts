@@ -1,8 +1,29 @@
+import { getString } from "@/lib/utils/index";
 import { Entry, EntrySkeletonType } from "contentful";
-import { ProductFields, MappedProduct } from "../types/product";
-import { mapScore } from "./mapScore";
-import { mapFaq } from "./mapFaq";
-import { notNull } from "@/lib/utils";
+import {
+  FaqSkeleton,
+  MappedFaq,
+  MappedProduct,
+  ProductFields,
+  ScoreSkeleton,
+} from "./product.types";
+import { notNull } from "./product.validators";
+
+export function mapFaq(entry?: Entry<FaqSkeleton> | null): MappedFaq | null {
+  if (!entry || !entry.fields) return null;
+
+  const question = getString(entry.fields.question);
+  const answer = getString(entry.fields.answer);
+
+  if (!question || !answer) return null;
+
+  return {
+    id: entry.sys.id,
+    question,
+    answer,
+  };
+}
+////
 
 export function mapContentfulProduct(
   entry: Entry<EntrySkeletonType>,
@@ -36,3 +57,26 @@ export function mapContentfulProduct(
       : [],
   };
 }
+
+//////
+
+export function mapScore(
+  entry?: Entry<ScoreSkeleton> | null,
+): { label: string; score: number } | null {
+  if (!entry || !entry.fields) return null;
+
+  const label = getString(entry.fields.label);
+  const score = Number(
+    typeof entry.fields.score === "number"
+      ? entry.fields.score
+      : Object.values(entry.fields.score ?? {})[0],
+  );
+
+  if (!label || Number.isNaN(score)) return null;
+
+  return {
+    label,
+    score,
+  };
+}
+/////

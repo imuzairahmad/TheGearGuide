@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { rateLimit } from "@/lib/rate-limit";
-import { sendMail } from "@/lib/sendmail";
+import { rateLimit } from "@/lib/utils/rate-limit";
+import { sendMail } from "@/lib/utils/sendmail";
 
 export async function POST(req: Request) {
   const ip = req.headers.get("x-forwarded-for") ?? "anonymous";

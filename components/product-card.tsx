@@ -2,9 +2,9 @@
 import { Card } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import Image from "next/image";
-import { MappedProduct } from "@/lib/contentfull";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { MappedProduct } from "@/lib/modules";
 
 interface ProductCardProps {
   product: MappedProduct;

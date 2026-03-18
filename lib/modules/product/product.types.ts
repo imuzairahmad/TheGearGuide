@@ -1,6 +1,4 @@
-import { Entry, EntrySkeletonType } from "contentful";
-import { ScoreSkeleton } from "./score";
-import { FaqSkeleton, MappedFaq } from "./faq";
+import { Entry, EntrySkeletonType, EntryFieldTypes } from "contentful";
 
 export interface ProductFields {
   slug: string;
@@ -40,4 +38,34 @@ export type MappedProduct = {
     score: number;
   }[];
   faqs?: MappedFaq[];
+};
+
+export interface FaqSkeleton extends EntrySkeletonType {
+  contentTypeId: "faq";
+  fields: {
+    question: EntryFieldTypes.Text;
+    answer: EntryFieldTypes.Text;
+    order?: EntryFieldTypes.Number;
+    product?: EntryFieldTypes.EntryLink<EntrySkeletonType>;
+  };
+}
+
+export type MappedFaq = {
+  id: string;
+  question: string;
+  answer: string;
+};
+
+////
+export interface ScoreSkeleton extends EntrySkeletonType {
+  contentTypeId: "score";
+  fields: {
+    label: EntryFieldTypes.Text;
+    score: EntryFieldTypes.Number;
+  };
+}
+
+export type MappedScore = {
+  label: string;
+  score: number;
 };

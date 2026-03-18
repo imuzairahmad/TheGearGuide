@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "contentful";
-import { mapContentfulProduct } from "@/lib/contentfull/mappers/mapProduct";
+import { mapContentfulProduct } from "@/lib/modules";
 
 const client = createClient({
   space: process.env.CONTENTFUL_SPACE_ID!,

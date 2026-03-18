@@ -13,7 +13,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { LoaderCircle, ArrowLeft, ArrowRight } from "lucide-react";
-import { MappedProduct } from "@/lib/contentfull";
+import { MappedProduct } from "@/lib/modules";
 
 const PAGE_SIZE = 12;
 
