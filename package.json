@@ -6,9 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "dev:server": "tsx index.ts",
-    "dev:worker": "tsx lib/automation/worker/product.worker.ts"
+    "lint": "eslint"
   },
   "engines": {
     "node": "24.x"

@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
     if (queueResult.status === "duplicate") {
       await sendMessage(
         from,
-        "⚠️ Product is already being processed. Please wait...",
+        "⚠️ Product is already being processed. Make a new request.",
       );
       return new Response("OK");
     }

@@ -30,8 +30,13 @@ export async function addProductToQueue(data: ProductQueueJob) {
   // ✅ ADD JOB
   await productQueue.add("product-scrape", data, {
     jobId,
+    attempts: 3,
+    backoff: {
+      type: "exponential",
+      delay: 2000,
+    },
     removeOnComplete: true,
-    removeOnFail: false,
+    removeOnFail: true,
   });
 
   return { status: "new" };
