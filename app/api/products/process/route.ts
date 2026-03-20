@@ -1,5 +1,5 @@
-// /api/products/process
 import { NextResponse } from "next/server";
+import slugify from "slugify";
 import { logger } from "@/config/logger";
 import { generateProductContent } from "@/lib/integrations";
 import { createProductEntry } from "@/lib/contentful";
@@ -15,7 +15,6 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-
     const { url, affiliateLink, from: userPhone, scraped } = body;
 
     from = userPhone;
@@ -26,9 +25,15 @@ export async function POST(req: Request) {
 
     logger.info("🚀 API processing started", { url });
 
-    // ✅ USE SCRAPED DATA (NO PUPPETEER HERE)
+    // ❌ Validate scrape
+    if (!scraped.title || scraped.title === "Amazon.com") {
+      throw new Error("Invalid scraped title");
+    }
+
+    // ✅ Generate AI content
     const aiData = await generateProductContent(scraped.title);
 
+    // ✅ Better fallback logic
     aiData.pros = (
       aiData.pros.length ? aiData.pros : (scraped.pros ?? [])
     ).slice(0, 3);
@@ -37,23 +42,26 @@ export async function POST(req: Request) {
       aiData.cons.length ? aiData.cons : (scraped.cons ?? [])
     ).slice(0, 3);
 
+    // ✅ Clean slug (IMPORTANT FIX)
+    const cleanSlug = slugify(scraped.title, {
+      lower: true,
+      strict: true,
+    }).slice(0, 80);
+
+    aiData.slug = cleanSlug;
+
+    // ✅ Affiliate
     aiData.amazonUrl = affiliateLink;
 
     const entry = await createProductEntry(aiData);
 
-    const fields = entry.fields as { slug?: { "en-US": string } };
-    const finalSlug = fields.slug?.["en-US"];
+    const finalUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/products/${cleanSlug}?source=all`;
 
-    if (!finalSlug) throw new Error("Slug missing");
-
-    const finalUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/products/${finalSlug}?source=all`;
-
-    // ✅ SUCCESS MESSAGE
     await sendMessage(from, `🔥 Your product is ready:\n\n${finalUrl}`);
 
     return NextResponse.json({
       success: true,
-      slug: finalSlug,
+      slug: cleanSlug,
       url: finalUrl,
     });
   } catch (err) {
