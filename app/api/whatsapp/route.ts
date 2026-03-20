@@ -1,28 +1,15 @@
+// app/api/whatsapp/route.ts
 import { NextRequest } from "next/server";
 import {
   extractUrl,
   expandShortLink,
   extractASIN,
   buildAffiliateLink,
-  scrapeAmazonLink,
 } from "@/lib/utils/index";
 
 import { addProductToQueue } from "@/lib/automation/queues/product.queue";
 import { sendMessage } from "@/lib/integrations";
 import { checkProductExistsBySlug } from "@/lib/contentful";
-
-export async function GET(req: NextRequest) {
-  const { searchParams } = req.nextUrl;
-
-  if (
-    searchParams.get("hub.mode") === "subscribe" &&
-    searchParams.get("hub.verify_token") === process.env.WHATSAPP_VERIFY_TOKEN
-  ) {
-    return new Response(searchParams.get("hub.challenge") ?? "");
-  }
-
-  return new Response("Forbidden", { status: 403 });
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -46,23 +33,22 @@ export async function POST(req: NextRequest) {
       return new Response("OK");
     }
 
-    // 2️⃣ Expand short link
+    // 2️⃣ Expand short links
     url = await expandShortLink(url);
 
-    // 3️⃣ Ensure Amazon
-    if (!url.includes("amazon")) {
-      const scraped = await scrapeAmazonLink(url);
-      if (!scraped) {
-        await sendMessage(from, "❌ Amazon link not found");
-        return new Response("OK");
-      }
-      url = scraped;
+    // 3️⃣ Only allow /dp/ links
+    if (!url.includes("/dp/")) {
+      await sendMessage(
+        from,
+        "❌ This link format cannot be scraped. Please add this product manually.",
+      );
+      return new Response("OK");
     }
 
     // 4️⃣ Extract ASIN
     const asin = extractASIN(url);
     if (!asin) {
-      await sendMessage(from, "❌ Invalid product");
+      await sendMessage(from, "❌ Invalid Amazon product");
       return new Response("OK");
     }
 
@@ -70,7 +56,7 @@ export async function POST(req: NextRequest) {
     const slug = `product-${asin}`;
     const affiliateLink = buildAffiliateLink(asin);
 
-    // 🔥 DUPLICATE CHECK
+    // 6️⃣ Duplicate check
     const existing = await checkProductExistsBySlug(slug);
     if (existing) {
       const fields = existing.fields as { slug?: { "en-US": string } };
@@ -84,7 +70,7 @@ export async function POST(req: NextRequest) {
       return new Response("OK");
     }
 
-    // 6️⃣ Add to queue
+    // 7️⃣ Add to queue
     const queueResult = await addProductToQueue({
       url,
       asin,
@@ -101,9 +87,7 @@ export async function POST(req: NextRequest) {
       return new Response("OK");
     }
 
-    // 7️⃣ ONE MESSAGE ONLY
     await sendMessage(from, "⏳ Processing your product... please wait");
-
     return new Response("OK");
   } catch (err) {
     console.error(err);
