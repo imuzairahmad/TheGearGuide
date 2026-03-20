@@ -9,6 +9,7 @@ export async function POST(req: Request) {
   let from: string | undefined;
 
   try {
+    // 🔐 Auth check
     const apiKey = req.headers.get("x-api-key");
     if (apiKey !== process.env.WORKER_SECRET) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
     // ✅ Generate AI content
     const aiData = await generateProductContent(scraped.title);
 
-    // ✅ Better fallback logic
+    // ✅ Fallback logic
     aiData.pros = (
       aiData.pros.length ? aiData.pros : (scraped.pros ?? [])
     ).slice(0, 3);
@@ -42,26 +43,48 @@ export async function POST(req: Request) {
       aiData.cons.length ? aiData.cons : (scraped.cons ?? [])
     ).slice(0, 3);
 
-    // ✅ Clean slug (IMPORTANT FIX)
-    const cleanSlug = slugify(scraped.title, {
+    // =========================
+    // ✅ FIXED SLUG LOGIC
+    // =========================
+
+    // 👉 Take only first few words (clean + SEO friendly)
+    const shortTitle = scraped.title.split(" ").slice(0, 6).join(" ");
+
+    const cleanSlug = slugify(shortTitle, {
       lower: true,
       strict: true,
-    }).slice(0, 80);
+      trim: true,
+    }).replace(/-$/, ""); // remove trailing dash if exists
+
+    if (!cleanSlug || cleanSlug.length < 5) {
+      throw new Error("Slug generation failed");
+    }
 
     aiData.slug = cleanSlug;
 
-    // ✅ Affiliate
+    // =========================
+
+    // ✅ Affiliate link
     aiData.amazonUrl = affiliateLink;
 
+    // ✅ Create entry in Contentful
     const entry = await createProductEntry(aiData);
 
-    const finalUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/products/${cleanSlug}?source=all`;
+    // =========================
+    // ✅ USE CONTENTFUL SLUG (SOURCE OF TRUTH)
+    // =========================
+    const finalSlug = entry?.fields?.slug?.["en-US"] || cleanSlug;
 
+    const finalUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/products/${finalSlug}?source=all`;
+
+    // =========================
+
+    // ✅ Send WhatsApp message
     await sendMessage(from, `🔥 Your product is ready:\n\n${finalUrl}`);
 
     return NextResponse.json({
       success: true,
-      slug: cleanSlug,
+      slug: finalSlug,
       url: finalUrl,
     });
   } catch (err) {
