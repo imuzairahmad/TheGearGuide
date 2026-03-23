@@ -1,93 +1,92 @@
+// lib/product/cheerioScraper.ts
 import axios from "axios";
 import * as cheerio from "cheerio";
 
-const MAX_RETRIES = 3;
-
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+// =========================
+// ✅ RETRY HELPER
+// =========================
+async function retry<T>(
+  fn: () => Promise<T>,
+  retries = 3,
+  delay = 2000,
+): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    if (retries === 0) throw err;
+    await new Promise((res) => setTimeout(res, delay));
+    return retry(fn, retries - 1, delay * 2); // exponential backoff
+  }
 }
 
-// Random User-Agent rotation (helps avoid Amazon blocking)
-function getUserAgent() {
+// =========================
+// ✅ RANDOM USER AGENT
+// =========================
+function getRandomUserAgent() {
   const agents = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/121 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15",
     "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X)",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Firefox/117.0",
   ];
   return agents[Math.floor(Math.random() * agents.length)];
 }
 
-export async function scrapeProduct(originalUrl: string) {
-  let url = originalUrl;
+// =========================
+// ✅ FETCH HTML
+// =========================
+async function fetchHTML(url: string): Promise<string> {
+  return retry(async () => {
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 15000); // 15s timeout
 
-  // ✅ Resolve amzn.to short links
-  if (url.includes("amzn.to")) {
-    try {
-      const res = await fetch(url, { method: "HEAD", redirect: "follow" });
-      url = res.url;
-    } catch {}
-  }
+    const res = await axios.get(url, {
+      signal: controller.signal,
+      headers: {
+        "User-Agent": getRandomUserAgent(),
+        "Accept-Language": "en-US,en;q=0.9",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        Referer: "https://www.amazon.com/",
+      },
+      validateStatus: () => true,
+    });
 
-  let lastError: any;
-
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    try {
-      const response = await axios.get(url, {
-        headers: {
-          "User-Agent": getUserAgent(),
-          "Accept-Language": "en-US,en;q=0.9",
-        },
-        timeout: 20000,
-        validateStatus: () => true,
-      });
-
-      if (response.status !== 200) {
-        throw new Error(`Status ${response.status}`);
-      }
-
-      const html = response.data;
-      const $ = cheerio.load(html);
-
-      // ✅ Title extraction (same fallback logic)
-      const title =
-        $("#productTitle").text().trim() ||
-        $("h1").first().text().trim() ||
-        $("title").text().trim() ||
-        "";
-
-      // ✅ Feature bullets (Amazon's main "pros")
-      const pros = $("#feature-bullets li span")
-        .map((_, el) => $(el).text().trim())
-        .get()
-        .filter((t) => t.length > 10)
-        .slice(0, 5);
-
-      // ❌ Cons usually not available directly → keep empty or AI-generated later
-      const cons: string[] = [];
-
-      // 🚨 Detect bot/captcha pages
-      if (
-        !title ||
-        title === "Amazon.com" ||
-        /robot check|captcha|sorry/i.test(html)
-      ) {
-        throw new Error("Blocked by Amazon (captcha)");
-      }
-
-      return { title, pros, cons };
-    } catch (err: any) {
-      lastError = err;
-
-      const retryable =
-        err.message?.includes("timeout") ||
-        err.message?.includes("ECONNRESET") ||
-        err.message?.includes("Status");
-
-      if (!retryable || attempt === MAX_RETRIES - 1) break;
-
-      await sleep(2000 * Math.pow(2, attempt)); // exponential backoff
+    if (res.status !== 200) {
+      throw new Error(`Bad status: ${res.status}`);
     }
+
+    return res.data;
+  }, 3); // 3 retries
+}
+
+// =========================
+// ✅ SCRAPER
+// =========================
+export async function scrapeProduct(url: string) {
+  const html = await fetchHTML(url);
+  const $ = cheerio.load(html);
+
+  // Get title
+  const title =
+    $("#productTitle").text().trim() ||
+    $("meta[name='title']").attr("content") ||
+    $("title").text().trim() ||
+    "";
+
+  // Get pros / features
+  const pros = $("#feature-bullets li span")
+    .map((_, el) => $(el).text().trim())
+    .get()
+    .filter((t) => t.length > 5)
+    .slice(0, 5);
+
+  // Cons are often not present, fallback empty
+  const cons: string[] = [];
+
+  if (!title || title === "Amazon.com") {
+    throw new Error("Failed to scrape product or bot detected");
   }
 
-  throw new Error(`Scrape failed after retries: ${lastError?.message}`);
+  return { title, pros, cons };
 }

@@ -60,19 +60,18 @@ export async function POST(req: NextRequest) {
     // 2️⃣ Expand short links
     url = await expandShortLink(url);
 
-    // 3️⃣ Validate Amazon link
-    if (!url.includes("/dp/") && !url.includes("/gp/product/")) {
-      await sendMessage(
-        from,
-        "❌ Invalid Amazon link. Please send a correct product URL.",
-      );
-      return new Response("OK");
-    }
-
-    // 4️⃣ Extract ASIN
+    // 4 Extract ASIN
     const asin = extractASIN(url);
     if (!asin) {
       await sendMessage(from, "❌ Invalid Amazon product");
+      return new Response("OK");
+    }
+
+    if (!asin || !url.includes("/dp/")) {
+      await sendMessage(
+        from,
+        "❌ Unsupported Amazon link.\n\n👉 Please send a standard product link (dp format) or add manually.",
+      );
       return new Response("OK");
     }
 
