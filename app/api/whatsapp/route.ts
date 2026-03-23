@@ -1,6 +1,10 @@
 import { NextRequest } from "next/server";
 import { sendMessage } from "@/lib/integrations";
-import { checkProductExistsBySlug } from "@/lib/contentful";
+import {
+  checkProductExistsBySlug,
+  isMessageProcessed,
+  markMessageProcessed,
+} from "@/lib/contentful";
 import {
   buildAffiliateLink,
   expandShortLink,
@@ -44,6 +48,19 @@ export async function POST(req: NextRequest) {
     const from = message.from;
 
     logger.info("📩 Incoming message", { messageId, from });
+
+    // =========================
+    // ✅ DEDUP USING CONTENTFUL
+    // =========================
+    const alreadyProcessed = await isMessageProcessed(messageId);
+
+    if (alreadyProcessed) {
+      logger.info("⚠️ Duplicate skipped", { messageId });
+      return new Response("OK");
+    }
+
+    // mark immediately (IMPORTANT)
+    await markMessageProcessed(messageId);
 
     const text =
       message.text?.body || message.image?.caption || message.video?.caption;
