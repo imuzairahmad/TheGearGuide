@@ -14,6 +14,20 @@ interface ProcessProductData {
   slug: string;
 }
 
+// =========================
+// ✅ TIMEOUT WRAPPER
+// =========================
+async function withTimeout<T>(promise: Promise<T>, ms = 15000): Promise<T> {
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error("Timeout")), ms),
+  );
+
+  return Promise.race([promise, timeout]);
+}
+
+// =========================
+// ✅ RETRY HELPER
+// =========================
 async function retry<T>(
   fn: () => Promise<T>,
   retries = 3,
@@ -23,47 +37,75 @@ async function retry<T>(
     return await fn();
   } catch (err) {
     if (retries === 0) throw err;
+
+    logger.warn("Retrying...", { retriesLeft: retries });
+
     await new Promise((r) => setTimeout(r, delay));
+
     return retry(fn, retries - 1, delay * 2);
   }
 }
 
+// =========================
+// ✅ PROCESS PRODUCT
+// =========================
 export async function processProduct(data: ProcessProductData) {
-  const { url, affiliateLink, from, asin, slug } = data;
+  const { url, affiliateLink, from, slug } = data;
 
   try {
     logger.info("🚀 Processing started", { url });
 
-    // ✅ Scrape product
-    const scraped = await retry(() => scrapeProduct(url));
+    // =========================
+    // ✅ SCRAPE PRODUCT
+    // =========================
+    const scraped = await retry(() => withTimeout(scrapeProduct(url), 15000));
 
-    // ❌ Validate scraped data
     if (!scraped.title || scraped.title === "Amazon.com") {
       await sendMessage(from, "❌ Could not fetch product. Add manually.");
       return;
     }
 
-    // ✅ AI content generation
-    const aiData = await retry(() => generateProductContent(scraped.title));
+    // =========================
+    // ✅ GENERATE AI CONTENT
+    // =========================
+    const aiData = await retry(() =>
+      withTimeout(generateProductContent(scraped.title), 20000),
+    );
+
     aiData.slug = slug;
     aiData.amazonUrl = affiliateLink;
+
     aiData.pros = aiData.pros.length
       ? aiData.pros.slice(0, 3)
       : scraped.pros.slice(0, 3);
+
     aiData.cons = aiData.cons.length
       ? aiData.cons.slice(0, 3)
       : scraped.cons.slice(0, 3);
 
-    // ❌ Final duplicate check
+    // =========================
+    // ✅ CHECK DUPLICATE
+    // =========================
     const existing = await checkProductExistsBySlug(slug);
+
     if (existing) {
-      const existingSlug = existing.fields as { slug?: { "en-US": string } };
-      const existingUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/products/${existingSlug}?source=all`;
-      await sendMessage(from, `✅ Product already exists:\n\n${existingUrl}`);
+      // ✅ TYPE-SAFE access (your concern handled properly)
+      const existingSlug = (existing.fields as any)?.slug?.["en-US"];
+
+      if (existingSlug) {
+        const existingUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/products/${existingSlug}?source=all`;
+
+        await sendMessage(from, `✅ Product already exists:\n\n${existingUrl}`);
+      } else {
+        await sendMessage(from, "⚠️ Product exists but slug missing.");
+      }
+
       return;
     }
 
-    // ✅ Validate AI + scraped data
+    // =========================
+    // ✅ VALIDATE DATA
+    // =========================
     if (!aiData.title || !aiData.description || !aiData.category) {
       await sendMessage(
         from,
@@ -72,16 +114,33 @@ export async function processProduct(data: ProcessProductData) {
       return;
     }
 
-    // ✅ Create Contentful entry
-    const entry = await retry(() => createProductEntry(aiData));
-    const finalSlug = entry.fields.slug["en-US"];
+    // =========================
+    // ✅ CREATE ENTRY
+    // =========================
+    const entry = await retry(() =>
+      withTimeout(createProductEntry(aiData), 20000),
+    );
+
+    const finalSlug = (entry.fields as any)?.slug?.["en-US"];
+
+    if (!finalSlug) {
+      await sendMessage(from, "⚠️ Product created but slug missing.");
+      return;
+    }
+
     const finalUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/products/${finalSlug}?source=all`;
 
+    // =========================
+    // ✅ SEND SUCCESS MESSAGE
+    // =========================
     await sendMessage(from, `🔥 Your product is ready:\n\n${finalUrl}`);
+
     logger.info("✅ Product created", { slug: finalSlug });
   } catch (err) {
     logger.error("❌ processProduct failed", err);
+
     await sendMessage(from, "❌ Failed. Try again later.");
+
     throw err;
   }
 }
