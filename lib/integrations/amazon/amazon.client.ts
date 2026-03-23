@@ -1,4 +1,5 @@
-import puppeteer from "puppeteer";
+import axios from "axios";
+import * as cheerio from "cheerio";
 
 const MAX_RETRIES = 3;
 
@@ -6,10 +7,20 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Random User-Agent rotation (helps avoid Amazon blocking)
+function getUserAgent() {
+  const agents = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/121 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X)",
+  ];
+  return agents[Math.floor(Math.random() * agents.length)];
+}
+
 export async function scrapeProduct(originalUrl: string) {
   let url = originalUrl;
 
-  // Resolve amzn.to short links
+  // ✅ Resolve amzn.to short links
   if (url.includes("amzn.to")) {
     try {
       const res = await fetch(url, { method: "HEAD", redirect: "follow" });
@@ -18,66 +29,63 @@ export async function scrapeProduct(originalUrl: string) {
   }
 
   let lastError: any;
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-      ],
-    });
 
-    const page = await browser.newPage();
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
-      await page.setUserAgent(
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-      );
-      await page.setExtraHTTPHeaders({ "accept-language": "en-US,en;q=0.9" });
-      await page.setRequestInterception(true);
-      page.on("request", (req) => {
-        if (["image", "font", "media"].includes(req.resourceType()))
-          req.abort();
-        else req.continue();
+      const response = await axios.get(url, {
+        headers: {
+          "User-Agent": getUserAgent(),
+          "Accept-Language": "en-US,en;q=0.9",
+        },
+        timeout: 20000,
+        validateStatus: () => true,
       });
 
-      await page.goto(url, { waitUntil: "domcontentloaded", timeout: 90000 });
-
-      const title =
-        (await page
-          .$eval("#productTitle", (el) => el.textContent?.trim())
-          .catch(() => null)) ||
-        (await page
-          .$eval("h1", (el) => el.textContent?.trim())
-          .catch(() => null)) ||
-        (await page.title()) ||
-        "";
-
-      const pageText = await page.evaluate(() => document.body.innerText);
-      const lines = pageText
-        .split("\n")
-        .map((l) => l.trim())
-        .filter(Boolean);
-      const pros: string[] = [];
-      const cons: string[] = [];
-
-      for (let i = 0; i < lines.length; i++) {
-        const lower = lines[i].toLowerCase();
-        if (lower.startsWith("pros") && lines[i + 1]) pros.push(lines[i + 1]);
-        if (lower.startsWith("cons") && lines[i + 1]) cons.push(lines[i + 1]);
+      if (response.status !== 200) {
+        throw new Error(`Status ${response.status}`);
       }
 
-      await browser.close();
+      const html = response.data;
+      const $ = cheerio.load(html);
+
+      // ✅ Title extraction (same fallback logic)
+      const title =
+        $("#productTitle").text().trim() ||
+        $("h1").first().text().trim() ||
+        $("title").text().trim() ||
+        "";
+
+      // ✅ Feature bullets (Amazon's main "pros")
+      const pros = $("#feature-bullets li span")
+        .map((_, el) => $(el).text().trim())
+        .get()
+        .filter((t) => t.length > 10)
+        .slice(0, 5);
+
+      // ❌ Cons usually not available directly → keep empty or AI-generated later
+      const cons: string[] = [];
+
+      // 🚨 Detect bot/captcha pages
+      if (
+        !title ||
+        title === "Amazon.com" ||
+        /robot check|captcha|sorry/i.test(html)
+      ) {
+        throw new Error("Blocked by Amazon (captcha)");
+      }
+
       return { title, pros, cons };
     } catch (err: any) {
-      await browser.close();
       lastError = err;
+
       const retryable =
+        err.message?.includes("timeout") ||
         err.message?.includes("ECONNRESET") ||
-        err.message?.includes("Navigation timeout") ||
-        err.message?.includes("net::ERR");
+        err.message?.includes("Status");
+
       if (!retryable || attempt === MAX_RETRIES - 1) break;
-      await sleep(2000 * Math.pow(2, attempt));
+
+      await sleep(2000 * Math.pow(2, attempt)); // exponential backoff
     }
   }
 
