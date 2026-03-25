@@ -39,39 +39,24 @@ const ENVIRONMENT_ID = "master";
 
 export async function createProductEntry(product: AIProductOutput) {
   const space = await managementClient.getSpace(SPACE_ID);
-  const environment = await space.getEnvironment(ENVIRONMENT_ID);
+  const env = await space.getEnvironment(ENVIRONMENT_ID);
 
-  const slug = product.title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+  const slug = product.slug;
 
-  const existing = await environment.getEntries({
+  if (!slug) {
+    throw new Error("Slug is required but missing.");
+  }
+
+  // Check existing
+  const existing = await env.getEntries({
     content_type: "product",
     "fields.slug": slug,
     limit: 1,
   });
 
-  if (existing.items.length > 0) {
-    return existing.items[0];
-  }
+  if (existing.items.length > 0) return existing.items[0];
 
-  // // 1️⃣ Create FAQ entries
-  // const faqEntries: any[] = [];
-  // if (Array.isArray(product.faqs)) {
-  //   for (const f of product.faqs) {
-  //     const faqEntry = await environment.createEntry("faq", {
-  //       fields: {
-  //         question: { "en-US": f.question },
-  //         answer: { "en-US": f.answer },
-  //       },
-  //     });
-  //     await faqEntry.publish();
-  //     faqEntries.push(faqEntry);
-  //   }
-  // }
-
-  const entry = await environment.createEntry("product", {
+  const entry = await env.createEntry("product", {
     fields: {
       title: { "en-US": product.title },
       description: { "en-US": product.description },
@@ -85,13 +70,9 @@ export async function createProductEntry(product: AIProductOutput) {
           ? product.cons.join("\n")
           : (product.cons ?? ""),
       },
-      // faqs: {
-      //   "en-US": faqEntries.map((e) => ({
-      //     sys: { type: "Link", linkType: "Entry", id: e.sys.id },
-      //   })),
-      // },
       category: { "en-US": product.category },
       amazonUrl: { "en-US": product.amazonUrl ?? "" },
+
       slug: { "en-US": slug },
     },
   });
