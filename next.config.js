@@ -6,3 +6,15 @@ const nextConfig = {
 };
 
 module.exports = nextConfig;
+
+// next.config.js
+module.exports = {
+  async headers() {
+    return [
+      {
+        source: "/api/whatsapp",
+        headers: [{ key: "Cache-Control", value: "no-store, max-age=0" }],
+      },
+    ];
+  },
+};

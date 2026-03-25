@@ -3,17 +3,17 @@ import {
   scrapeProduct,
   generateProductContent,
 } from "@/lib/integrations";
+
 import {
-  checkProductExistsBySlug,
-  isMessageProcessed,
-  markMessageProcessed,
-  createProductEntry,
-  getProductLock,
-  canRetryLock,
-  fetchLockLatestVersion,
+  markMessageProcessedAtomic,
+  acquireProductLock,
   updateLockStatus,
-  createProcessingLock,
-} from "../contentful";
+  fetchLockLatestVersion,
+  canRetryLock,
+  createProductEntry,
+  getLockProductSlug, // 🔧 New import
+} from "@/lib/contentful";
+
 import {
   extractUrl,
   extractASIN,
@@ -21,6 +21,7 @@ import {
   buildAffiliateLink,
   generateSlug,
 } from "@/lib/utils/index";
+
 import { logger } from "@/config/logger";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL!;
@@ -34,109 +35,159 @@ export async function handleIncomingMessage(message: any) {
   try {
     logger.info("📩 Incoming message", { messageId, from });
 
-    // Check if the message has already been processed
-    if (await isMessageProcessed(messageId)) {
-      logger.warn("⚠️ Duplicate skipped", { messageId });
+    // ✅ ATOMIC MESSAGE DEDUP
+    const isNew = await markMessageProcessedAtomic(messageId);
+    if (!isNew) {
+      logger.warn("⚠️ Duplicate message skipped", { messageId });
       return;
     }
-    await markMessageProcessed(messageId);
 
     if (!text) {
-      await sendMessage(from, "❌ Send a product link.");
+      await sendMessage(from, "❌ Please send a product link.");
       return;
     }
 
+    // ✅ EXTRACT URL & ASIN
     let url = extractUrl(text);
     if (!url) {
-      await sendMessage(from, "❌ No link found.");
+      await sendMessage(from, "❌ No valid link found.");
       return;
     }
 
     url = await expandShortLink(url);
+
     if (url.includes("/gp/product/")) {
-      await sendMessage(from, "❌ Use /dp/ format link.");
+      await sendMessage(from, "❌ Please use /dp/ format link.");
       return;
     }
 
     const asin = extractASIN(url);
     if (!asin) {
-      await sendMessage(from, "❌ Invalid Amazon product.");
+      await sendMessage(from, "❌ Invalid Amazon product link.");
       return;
     }
 
-    // Scrape the product title from the URL
-    const normalizedUrl = `https://www.amazon.com/dp/${asin}`;
-    let scraped;
-    try {
-      scraped = await scrapeProduct(normalizedUrl);
-    } catch (err) {
-      await sendMessage(from, "❌ Failed to fetch product (Amazon blocked).");
-      return;
-    }
-
-    // Generate a user-friendly slug for the product (shortened)
-    const slug = generateSlug(scraped.title); // This generates a clean, short slug
+    const productUrl = `https://www.amazon.com/dp/${asin}`;
     const affiliateLink = buildAffiliateLink(asin);
 
-    // Check if the product already exists
-    const existing = await checkProductExistsBySlug(slug);
-    if (existing) {
+    // 🔥 LOCK SYSTEM (by ASIN, not slug)
+    let lockResult = await acquireProductLock(asin);
+    let lock = lockResult.lock;
+
+    if (lockResult.state === "processing") {
+      await sendMessage(from, "⏳ Already processing this product.");
+      return;
+    }
+
+    if (lockResult.state === "completed") {
+      // 🔧 Get slug from lock, not ASIN
+      const productSlug = getLockProductSlug(lock) || asin;
       await sendMessage(
         from,
-        `✅ Already exists:\n${BASE_URL}/products/${slug}`,
+        `✅ Product already exists:\n${BASE_URL}/products/${productSlug}`,
       );
       return;
     }
 
-    // Handle product lock to prevent race conditions
-    let lock = await getProductLock(slug);
-    if (lock) {
-      const status = lock.fields.status["en-US"];
-      if (status === "processing") {
-        await sendMessage(from, "⏳ Already processing.");
+    if (lockResult.state === "failed") {
+      if (!canRetryLock(lock)) {
+        await sendMessage(
+          from,
+          "⚠️ Processing failed recently. Please try again in 5 minutes.",
+        );
         return;
       }
-      if (status === "failed" && !canRetryLock(lock)) {
-        await sendMessage(from, "⚠️ Try again later.");
-        return;
-      }
-      if (status === "failed") {
-        lock = await fetchLockLatestVersion(lock.sys.id);
-        await updateLockStatus(lock, "processing");
-      }
-    } else {
-      lock = await createProcessingLock(slug);
+      // Retry: update lock to processing
+      const latest = await fetchLockLatestVersion(lock.sys.id);
+      await updateLockStatus(latest, "processing");
+      lock = latest;
     }
 
     await sendMessage(from, "⏳ Processing your product...");
 
-    // Generate AI content for the product
+    // 🔍 SCRAPE PRODUCT
+    let scraped;
+    try {
+      scraped = await scrapeProduct(productUrl);
+    } catch (err) {
+      logger.error("❌ Scraping failed", { asin, err });
+      await updateLockStatus(lock, "failed");
+      await sendMessage(
+        from,
+        "❌ Failed to fetch product details. Please check the link and try again.",
+      );
+      return;
+    }
+
+    // 🏷 GENERATE SLUG FROM TITLE
+    const slug = generateSlug(scraped.title);
+
+    // 🤖 AI CONTENT GENERATION
     let aiData;
     try {
       aiData = await generateProductContent(scraped.title);
-      aiData.slug = slug; // Ensure this uses the generated slug
+      aiData.slug = slug;
       aiData.amazonUrl = affiliateLink;
     } catch (err) {
-      await sendMessage(from, "❌ AI generation failed.");
+      logger.error("❌ AI generation failed", { asin, err });
+      await updateLockStatus(lock, "failed");
+      await sendMessage(
+        from,
+        "❌ Failed to generate product content. Please try again.",
+      );
       return;
     }
 
-    // Create product entry in Contentful
-    let entry;
+    // 💾 SAVE TO CONTENTFUL
+    let finalSlug = slug;
     try {
-      entry = await createProductEntry(aiData);
-    } catch (err) {
-      await sendMessage(from, "❌ Failed to save product.");
+      const existingProduct = await createProductEntry(aiData);
+      // If returned existing, use its slug
+      if (existingProduct?.fields?.slug?.["en-US"]) {
+        finalSlug = existingProduct.fields.slug["en-US"];
+      }
+    } catch (err: any) {
+      const slugError =
+        err?.details?.errors?.[0]?.name === "unique" &&
+        err?.details?.errors?.[0]?.path?.includes("slug");
+
+      if (slugError) {
+        // Product exists with this slug
+        finalSlug = slug;
+        await sendMessage(
+          from,
+          `✅ Product already exists:\n${BASE_URL}/products/${finalSlug}`,
+        );
+        // Mark lock complete with existing slug
+        const latest = await fetchLockLatestVersion(lock.sys.id);
+        await updateLockStatus(latest, "completed", finalSlug);
+        return;
+      }
+
+      logger.error("❌ Failed to save product", { asin, err });
+      await updateLockStatus(lock, "failed");
+      await sendMessage(
+        from,
+        "❌ Failed to save product. Please try again later.",
+      );
       return;
     }
 
-    // Mark the product as completed in Contentful
-    lock = await fetchLockLatestVersion(lock.sys.id);
-    await updateLockStatus(lock, "completed");
+    // ✅ COMPLETE LOCK WITH FINAL SLUG
+    const latest = await fetchLockLatestVersion(lock.sys.id);
+    await updateLockStatus(latest, "completed", finalSlug);
 
-    await sendMessage(from, `🔥 Product ready:\n${BASE_URL}/products/${slug}`);
+    await sendMessage(
+      from,
+      `🔥 Product ready:\n${BASE_URL}/products/${finalSlug}`,
+    );
+
+    logger.info("✅ Product processed successfully", { asin, slug: finalSlug });
   } catch (err) {
-    logger.error("❌ Worker failed", err);
-    await sendMessage(from, "❌ Failed. Try again later.");
+    logger.error("❌ Worker failed", { messageId, err });
+    await sendMessage(
+      from,
+      "❌ An unexpected error occurred. Please try again later.",
+    );
   }
 }

@@ -8,19 +8,12 @@ async function getEnv() {
   return await space.getEnvironment(ENV);
 }
 
-export async function isMessageProcessed(messageId: string) {
-  const env = await getEnv();
-
-  const res = await env.getEntries({
-    content_type: "webhookLog",
-    "fields.messageId": messageId,
-    limit: 1,
-  });
-
-  return res.items.length > 0;
-}
-
-export async function markMessageProcessed(messageId: string) {
+/**
+ * ✅ ATOMIC DEDUP
+ * - Returns true → first time (process it)
+ * - Returns false → duplicate (skip)
+ */
+export async function markMessageProcessedAtomic(messageId: string) {
   const env = await getEnv();
 
   try {
@@ -31,7 +24,18 @@ export async function markMessageProcessed(messageId: string) {
     });
 
     await entry.publish();
-  } catch {
-    console.warn("Duplicate message avoided");
+
+    return true; // ✅ first time
+  } catch (err: any) {
+    // ⚠️ Contentful duplicate / validation error
+    if (
+      err?.name === "ValidationFailed" ||
+      err?.message?.includes("already exists")
+    ) {
+      return false; // ❌ duplicate
+    }
+
+    // Unexpected error → rethrow
+    throw err;
   }
 }
