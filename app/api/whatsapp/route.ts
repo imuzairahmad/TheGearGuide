@@ -1,6 +1,29 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/config/logger";
 import { handleIncomingMessage } from "@/lib/automation";
+
+const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN!;
+
+export async function GET(req: NextRequest) {
+  const searchParams = req.nextUrl.searchParams;
+
+  const mode = searchParams.get("hub.mode");
+  const token = searchParams.get("hub.verify_token");
+  const challenge = searchParams.get("hub.challenge");
+
+  if (!mode || !token) {
+    return new NextResponse("Missing parameters", { status: 400 });
+  }
+
+  // ✅ Verify token
+  if (mode === "subscribe" && token === VERIFY_TOKEN) {
+    console.log("✅ Webhook verified successfully");
+    return new NextResponse(challenge, { status: 200 });
+  } else {
+    console.log("❌ Verification failed");
+    return new NextResponse("Forbidden", { status: 403 });
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
