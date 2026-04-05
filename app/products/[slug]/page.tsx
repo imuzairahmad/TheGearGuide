@@ -161,7 +161,12 @@ export default function ProductDetailPage() {
             </div> */}
 
             {/* Amazon */}
-            {product.amazonUrl && (
+            <div className="relative">
+              {/* Floating Badge */}
+              <div className="absolute -top-3 left-2 bg-red-400 text-white text-[15px] font-bold px-2 py-1 rounded-full animate-bounce cursor-pointer">
+                👇 Click Here
+              </div>
+
               <Link
                 href={product.amazonUrl}
                 target="_blank"
@@ -170,7 +175,7 @@ export default function ProductDetailPage() {
               >
                 Check Price at Amazon
               </Link>
-            )}
+            </div>
 
             {/* Description */}
             <Card className="p-6 bg-primary/5 border-none overflow-hidden">
