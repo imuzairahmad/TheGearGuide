@@ -7,19 +7,33 @@ const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN!;
 export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
 
-  if (
-    sp.get("hub.mode") === "subscribe" &&
-    sp.get("hub.verify_token") === VERIFY_TOKEN
-  ) {
-    return new NextResponse(sp.get("hub.challenge"), { status: 200 });
+  // ✅ Check both formats (dot and underscore)
+  const mode = sp.get("hub.mode") || sp.get("hub_mode");
+  const token = sp.get("hub.verify_token") || sp.get("hub_verify_token");
+  const challenge = sp.get("hub.challenge") || sp.get("hub_challenge");
+
+  logger.info("🔍 Webhook verification attempt", {
+    mode,
+    token: token?.substring(0, 10),
+  });
+
+  if (mode === "subscribe" && token === VERIFY_TOKEN) {
+    logger.info("✅ Webhook verified");
+    return new NextResponse(challenge, { status: 200 });
   }
 
+  logger.error("❌ Verification failed", { mode, token });
   return new NextResponse("Forbidden", { status: 403 });
 }
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+
+    logger.info("📩 Incoming webhook", {
+      object: body.object,
+      entries: body.entry?.length,
+    });
 
     const messages: any[] = [];
 
@@ -29,12 +43,32 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // ⚡ Process safely (no background loss)
-    await Promise.allSettled(messages.map((msg) => handleIncomingMessage(msg)));
+    // Process with proper error boundaries
+    const results = await Promise.allSettled(
+      messages.map((msg) => handleIncomingMessage(msg)),
+    );
 
-    return NextResponse.json({ status: "ok" });
-  } catch (err) {
-    logger.error("❌ Webhook error", err);
-    return NextResponse.json({ status: "error" });
+    // Log failures
+    results.forEach((result, i) => {
+      if (result.status === "rejected") {
+        logger.error(`❌ Message ${i} failed`, result.reason);
+      }
+    });
+
+    return NextResponse.json({
+      status: "ok",
+      processed: messages.length,
+      failed: results.filter((r) => r.status === "rejected").length,
+    });
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err : new Error(String(err));
+    logger.error("❌ Webhook error", {
+      message: error.message,
+      stack: error.stack,
+    });
+    return NextResponse.json(
+      { status: "error", message: error.message },
+      { status: 500 },
+    );
   }
 }
