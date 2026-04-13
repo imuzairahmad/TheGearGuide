@@ -1,8 +1,8 @@
-export function buildAffiliateLink(asin: string) {
-  if (!asin) throw new Error("ASIN is required");
-  const tag = process.env.AMAZON_PARTNER_TAG;
-  if (!tag) throw new Error("Amazon partner tag not set in .env");
+export function buildAffiliateLink(asin: string, resolvedUrl: string): string {
+  // Extract domain from resolved URL (e.g., amazon.co.uk)
+  const match = resolvedUrl.match(/amazon\.([a-z.]+)/i);
+  const domain = match ? match[0] : "amazon.com";
 
-  // Basic Amazon US link; you can change .com to .co.uk etc if needed
-  return `https://www.amazon.com/dp/${asin}?tag=${tag}`;
+  const tag = process.env.AMAZON_PARTNER_TAG || "your-tag-20";
+  return `https://www.${domain}/dp/${asin}?tag=${tag}`;
 }

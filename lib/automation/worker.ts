@@ -11,7 +11,7 @@ import {
   fetchLockLatestVersion,
   canRetryLock,
   createProductEntry,
-  getLockProductSlug, // 🔧 New import
+  getLockProductSlug,
 } from "@/lib/contentful";
 
 import {
@@ -26,6 +26,9 @@ import { logger } from "@/config/logger";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL!;
 
+// 🔥 IN-MEMORY DEDUPLICATION CACHE (prevents race conditions)
+const processedMessages = new Set<string>();
+
 export async function handleIncomingMessage(message: any) {
   const messageId = message.id;
   const from = message.from;
@@ -35,10 +38,28 @@ export async function handleIncomingMessage(message: any) {
   try {
     logger.info("📩 Incoming message", { messageId, from });
 
-    // ✅ ATOMIC MESSAGE DEDUP
+    // 🔥 STEP 1: INSTANT IN-MEMORY DEDUP (catches rapid duplicates)
+    if (processedMessages.has(messageId)) {
+      logger.warn("⚠️ Duplicate message blocked by memory cache", {
+        messageId,
+      });
+      return;
+    }
+    processedMessages.add(messageId);
+
+    // Keep cache size manageable (keep last 1000 messages)
+    if (processedMessages.size > 1000) {
+      const iterator = processedMessages.values();
+      const firstValue = iterator.next().value;
+      if (firstValue !== undefined) {
+        processedMessages.delete(firstValue);
+      }
+    }
+
+    // 🔥 STEP 2: DATABASE DEDUP (Contentful - persistent)
     const isNew = await markMessageProcessedAtomic(messageId);
     if (!isNew) {
-      logger.warn("⚠️ Duplicate message skipped", { messageId });
+      logger.warn("⚠️ Duplicate message skipped (database)", { messageId });
       return;
     }
 
@@ -47,80 +68,143 @@ export async function handleIncomingMessage(message: any) {
       return;
     }
 
-    // ✅ EXTRACT URL & ASIN
+    // ✅ EXTRACT URL
     let url = extractUrl(text);
     if (!url) {
       await sendMessage(from, "❌ No valid link found.");
       return;
     }
 
-    url = await expandShortLink(url);
+    // 🔥 EXPAND SHORT LINK (may return same URL if blocked)
+    const resolvedUrl = (await expandShortLink(url)).trim();
+    logger.info("🔗 Resolved URL", { original: url, resolved: resolvedUrl });
 
-    if (url.includes("/gp/product/")) {
-      await sendMessage(from, "❌ Please use /dp/ format link.");
+    // ✅ VALIDATE DOMAIN (allow amazon.* and amzn.*)
+    if (!resolvedUrl.match(/(amazon\.[a-z.]+|amzn\.to|amzn\.com)/i)) {
+      await sendMessage(from, "❌ Invalid Amazon link.");
       return;
     }
 
-    const asin = extractASIN(url);
-    if (!asin) {
-      await sendMessage(from, "❌ Invalid Amazon product link.");
-      return;
-    }
+    // 🔥 TRY TO EXTRACT ASIN (for short links, this will be null)
+    const extractedAsin = extractASIN(resolvedUrl);
 
-    const productUrl = `https://www.amazon.com/dp/${asin}`;
-    const affiliateLink = buildAffiliateLink(asin);
+    // For short links, we'll get ASIN from scraper later
+    const isShortLink =
+      resolvedUrl.includes("amzn.to") || resolvedUrl.includes("amzn.com");
 
-    // 🔥 LOCK SYSTEM (by ASIN, not slug)
-    let lockResult = await acquireProductLock(asin);
-    let lock = lockResult.lock;
+    // 🔥 LOCK SYSTEM
+    // If we have ASIN now, check lock. If not (short link), skip lock check until after scrape
+    let lock: any = null;
+    let asinForLock: string | null = extractedAsin;
 
-    if (lockResult.state === "processing") {
-      await sendMessage(from, "⏳ Already processing this product.");
-      return;
-    }
+    if (asinForLock) {
+      const lockResult = await acquireProductLock(asinForLock);
+      lock = lockResult.lock;
 
-    if (lockResult.state === "completed") {
-      // 🔧 Get slug from lock, not ASIN
-      const productSlug = getLockProductSlug(lock) || asin;
-      await sendMessage(
-        from,
-        `✅ Product already exists:\n${BASE_URL}/products/${productSlug}`,
-      );
-      return;
-    }
+      if (lockResult.state === "processing") {
+        await sendMessage(from, "⏳ Already processing this product.");
+        return;
+      }
 
-    if (lockResult.state === "failed") {
-      if (!canRetryLock(lock)) {
+      if (lockResult.state === "completed") {
+        const productSlug = getLockProductSlug(lock) || asinForLock;
         await sendMessage(
           from,
-          "⚠️ Processing failed recently. Please try again in 5 minutes.",
+          `✅ Product already exists:\n${BASE_URL}/products/${productSlug}`,
         );
         return;
       }
-      // Retry: update lock to processing
-      const latest = await fetchLockLatestVersion(lock.sys.id);
-      await updateLockStatus(latest, "processing");
-      lock = latest;
+
+      if (lockResult.state === "failed") {
+        if (!canRetryLock(lock)) {
+          await sendMessage(
+            from,
+            "⚠️ Processing failed recently. Please try again in 5 minutes.`",
+          );
+          return;
+        }
+        const latest = await fetchLockLatestVersion(lock.sys.id);
+        await updateLockStatus(latest, "processing");
+        lock = latest;
+      }
     }
 
     await sendMessage(from, "⏳ Processing your product...");
 
     // 🔍 SCRAPE PRODUCT
-    let scraped;
+    let scraped: any;
     try {
-      scraped = await scrapeProduct(productUrl);
+      scraped = await scrapeProduct(resolvedUrl);
     } catch (err) {
-      logger.error("❌ Scraping failed", { asin, err });
-      await updateLockStatus(lock, "failed");
+      logger.error("❌ Scraping failed", { url: resolvedUrl, err });
+
+      // Update lock if we had one
+      if (lock) {
+        await updateLockStatus(lock, "failed");
+      }
+
       await sendMessage(
         from,
-        "❌ Failed to fetch product details. Please check the link and try again.",
+        "❌ Failed to fetch product details. The product may be unavailable or restricted.",
       );
       return;
     }
 
+    // 🔥 GET ASIN FROM SCRAPER (for short links)
+    if (!asinForLock && scraped.asin) {
+      asinForLock = scraped.asin;
+      console.log(`✅ Got ASIN from scraper: ${asinForLock}`);
+
+      // Now check lock with the ASIN we just got
+      const lockResult = await acquireProductLock(asinForLock!);
+      lock = lockResult.lock;
+
+      if (lockResult.state === "processing") {
+        await sendMessage(from, "⏳ Already processing this product.");
+        return;
+      }
+
+      if (lockResult.state === "completed") {
+        const productSlug = getLockProductSlug(lock) || asinForLock;
+        await sendMessage(
+          from,
+          `✅ Product already exists:\n${BASE_URL}/products/${productSlug}`,
+        );
+        return;
+      }
+
+      if (lockResult.state === "failed") {
+        if (!canRetryLock(lock)) {
+          await sendMessage(
+            from,
+            "⚠️ Processing failed recently. Please try again in 5 minutes.",
+          );
+          return;
+        }
+        const latest = await fetchLockLatestVersion(lock.sys.id);
+        await updateLockStatus(latest, "processing");
+        lock = latest;
+      }
+    }
+
+    // If still no ASIN, we can't proceed
+    if (!asinForLock) {
+      logger.error("❌ Could not extract ASIN from URL or scraper");
+      await sendMessage(from, "❌ Could not extract product ID from link.");
+      return;
+    }
+
+    // 🔥 EXPLICIT TYPE ASSERTION - asinForLock is now guaranteed to be string
+    const asin: string = asinForLock;
+
     // 🏷 GENERATE SLUG FROM TITLE
     const slug = generateSlug(scraped.title);
+
+    // Build affiliate link - asin is now guaranteed to be string
+    const affiliateLink = buildAffiliateLink(
+      asin,
+      scraped.finalUrl || resolvedUrl,
+    );
 
     // 🤖 AI CONTENT GENERATION
     let aiData;
@@ -142,7 +226,6 @@ export async function handleIncomingMessage(message: any) {
     let finalSlug = slug;
     try {
       const existingProduct = await createProductEntry(aiData);
-      // If returned existing, use its slug
       if (existingProduct?.fields?.slug?.["en-US"]) {
         finalSlug = existingProduct.fields.slug["en-US"];
       }
@@ -152,13 +235,11 @@ export async function handleIncomingMessage(message: any) {
         err?.details?.errors?.[0]?.path?.includes("slug");
 
       if (slugError) {
-        // Product exists with this slug
         finalSlug = slug;
         await sendMessage(
           from,
           `✅ Product already exists:\n${BASE_URL}/products/${finalSlug}`,
         );
-        // Mark lock complete with existing slug
         const latest = await fetchLockLatestVersion(lock.sys.id);
         await updateLockStatus(latest, "completed", finalSlug);
         return;
