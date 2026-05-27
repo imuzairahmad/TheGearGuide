@@ -5,6 +5,7 @@ import { Poppins } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import Navbar from "@/components/navbar";
 import Preview from "@/components/preview";
+import { Analytics } from "@vercel/analytics/next";
 
 const poppins = Poppins({
   weight: ["400", "500", "600", "700"],
@@ -37,6 +38,7 @@ export default function RootLayout({
           <Navbar />
           <main>{children}</main>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
